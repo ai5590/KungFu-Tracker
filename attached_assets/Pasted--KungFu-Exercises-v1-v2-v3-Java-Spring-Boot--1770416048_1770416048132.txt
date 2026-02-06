@@ -1,0 +1,249 @@
+СДЕЛАЙ ПОЛНОСТЬЮ ГОТОВОЕ ВЕБ-ПРИЛОЖЕНИЕ "KungFu Exercises" (v1+v2+v3) НА Java Spring Boot + простой фронт на HTML/CSS/Vanilla JS.
+
+ЦЕЛЬ
+- Приложение показывает дерево разделов/упражнений слева (как проводник: раскрытие/сворачивание).
+- Справа карточка выбранного упражнения: заголовок, описание из exercise.json, заметки из notes.md, список прикреплённых файлов (любые файлы, в т.ч. видео до 1GB+), просмотр видео прямо в браузере.
+- Можно:
+  - создавать/переименовывать/удалять разделы (папки)
+  - создавать/переименовывать/удалять упражнения (папка упражнения)
+  - редактировать описание упражнения (exercise.json поле text) и сохранять
+  - редактировать notes.md и сохранять
+  - загружать файлы в упражнение (в папку media/)
+  - удалять файлы из упражнения
+- Доступ по логину/паролю. Логины/пароли читаются из файла users.txt (каждая строка "login:password"). При старте создать users.txt с одной строкой "ai:1". Логины можно добавлять вручную, приложение подхватывает их без перезапуска (либо перезапуском — но лучше без).
+
+ТЕХСТЕК
+- Backend: Java 17+, Spring Boot 3.x, Spring Web, Spring Security, Validation.
+- Хранилище: файловая структура на диске (никакой БД).
+- Frontend: один HTML + один JS + один CSS (без React).
+- Тесты: JUnit 5, Spring Boot Test, MockMvc, временная файловая система (TempDir).
+
+ВАЖНОЕ ПРО ХРАНЕНИЕ ДАННЫХ
+Корневая папка данных: ./data (рядом с проектом). Внутри может быть любой корневой раздел (например KungFu).
+
+Структура:
+data/
+  KungFu/
+    _section.json
+    Basics/
+      _section.json
+      HorseStance/
+        exercise.json
+        notes.md
+        media/
+          любые файлы (видео, картинки, pdf и т.д.)
+
+Требования к именам:
+- Разреши названия на русском (UTF-8).
+- Для безопасных путей: храни "displayName" в _section.json и exercise.json, а физическое имя папки делай безопасным slug (НО при этом пользователь хочет "чтобы можно было на русском называть").
+  Компромисс: разреши папки с русскими именами напрямую, но обязательно сделай защиту от path traversal и нормализацию. Если ОС/файловая система позволяет — работаем напрямую. Никакого ".." и абсолютных путей.
+- Идентификатор упражнения/раздела = его относительный путь от ./data (например "KungFu/Basics/HorseStance").
+
+ФОРМАТЫ ФАЙЛОВ
+1) _section.json (мета раздела) пример:
+{
+  "title": "Basics",
+  "createdAt": "2026-02-07T12:00:00Z",
+  "updatedAt": "2026-02-07T12:00:00Z"
+}
+
+2) exercise.json (мета упражнения) пример:
+{
+  "title": "Horse Stance",
+  "text": "Описание упражнения...",
+  "createdAt": "2026-02-07T12:00:00Z",
+  "updatedAt": "2026-02-07T12:00:00Z"
+}
+
+3) notes.md — обычный markdown текст (может быть пустой)
+
+Файлы в media/ — любые. Для видео: mp4/mov/webm и т.п. Просмотр через <video controls>.
+
+ФУНКЦИОНАЛ v1+v2+v3
+v1 (обязательно)
+- Левое дерево: разделы/подразделы/упражнения. Разделы раскрываются/сворачиваются.
+- Клик по упражнению: загрузить справа title, text, notes.md, список файлов media/.
+- Просмотр файла:
+  - если это видео (по MIME или расширению) — показать <video controls> с src на endpoint streaming.
+  - если изображение — <img>
+  - иначе — ссылка "скачать/открыть".
+
+v2 (обязательно)
+- Редактирование текста (exercise.json -> text) в textarea + кнопка "Сохранить описание".
+- Редактирование заметок notes.md в textarea + кнопка "Сохранить заметки".
+- Переименование раздела и упражнения (менять папку + менять title в json).
+
+v3 (обязательно)
+- Загрузка файлов в media/ выбранного упражнения:
+  - input type=file multiple
+  - отправка multipart/form-data
+  - после загрузки обновить список файлов
+- Удаление файла из media/:
+  - кнопка "Удалить" рядом с файлом
+- Файлы могут быть 1GB+, поэтому:
+  - настрой лимиты multipart (spring.servlet.multipart.max-file-size и max-request-size) минимум 2048MB
+  - сделай streaming выдачу файлов, чтобы <video> мог перематывать (Range requests). Реализуй поддержку HTTP Range для больших видео (очень важно).
+
+АВТО-СОЗДАНИЕ ДЕМО-ДАННЫХ
+При первом старте, если ./data пустая:
+- создать ./data/KungFu/_section.json (title="KungFu")
+- создать ./data/KungFu/Basics/_section.json (title="Basics")
+- создать ./data/KungFu/Basics/HorseStance/exercise.json (title="HorseStance", text="Demo text")
+- создать ./data/KungFu/Basics/HorseStance/notes.md ("Demo notes")
+- создать ./data/KungFu/Basics/HorseStance/media/ (пусто)
+Это нужно, чтобы интерфейс сразу показывал пример.
+
+АВТОРИЗАЦИЯ
+- Сделай страницу логина (form login) на /login.
+- Пользователи из файла ./users.txt, формат строк: login:password
+- Пароли можно хранить пока в открытом виде (простота), но в коде сделай PasswordEncoder, который сравнивает raw (NoOp) или используй delegating encoder с "{noop}".
+- Ограничь доступ ко всем страницам, кроме /login и /assets/* (если будут статики).
+- После логина редирект на /.
+
+БЕЗОПАСНОСТЬ ПУТЕЙ (ОБЯЗАТЕЛЬНО)
+- Любой входной path (sectionPath/exercisePath/fileName) должен:
+  - запрещать '..'
+  - запрещать абсолютные пути
+  - нормализоваться
+  - резолвиться только внутри ./data
+  - если попытка выйти за пределы — 400
+- fileName тоже валидировать (без слешей и backslash).
+
+API (сделай JSON и понятные ошибки)
+1) Дерево:
+GET /api/tree
+Ответ: дерево с типами nodeType: "SECTION" | "EXERCISE"
+Каждый узел: { name, path, nodeType, children? }
+- SECTION children: sections + exercises
+
+2) Просмотр упражнения:
+GET /api/exercises?path=KungFu/Basics/HorseStance
+Ответ:
+{
+  "path": "...",
+  "title": "...",
+  "text": "...",
+  "notes": "...(содержимое notes.md)...",
+  "files": [
+     {"fileName":"2026-02-07_front.mp4","size":123,"contentType":"video/mp4","url":"/api/files/stream?exercisePath=...&fileName=..."}
+  ]
+}
+
+3) Сохранить описание:
+PUT /api/exercises/text?path=...
+Body: { "text": "..." }
+Обновить updatedAt.
+
+4) Сохранить заметки:
+PUT /api/exercises/notes?path=...
+Body: { "notes": "..." }
+Писать в notes.md.
+
+5) Создать раздел:
+POST /api/sections
+Body: { "parentPath": "KungFu/Basics", "title": "Стойки" }
+- Создаёт папку + _section.json
+- Возвращает созданный path
+
+6) Переименовать раздел:
+PUT /api/sections/rename
+Body: { "path":"KungFu/Basics", "newTitle":"База" }
+- Переименовать папку (filesystem) + обновить _section.json title.
+
+7) Удалить раздел:
+DELETE /api/sections?path=...
+- Удалять рекурсивно (с подтверждением на фронте)
+
+8) Создать упражнение:
+POST /api/exercises
+Body: { "sectionPath":"KungFu/Basics", "title":"Ма Бу" }
+- Создаёт папку упражнения внутри sectionPath
+- exercise.json + notes.md + media/
+
+9) Переименовать упражнение:
+PUT /api/exercises/rename
+Body: { "path":"KungFu/Basics/Ма Бу", "newTitle":"Ма Бу (стойка)" }
+- Переименовать папку + обновить exercise.json title.
+
+10) Удалить упражнение:
+DELETE /api/exercises?path=...
+
+11) Upload файлов:
+POST /api/files/upload?exercisePath=...
+multipart: files[]
+- Сохранять в media/
+- Если файла нет media/ — создать
+- Если имя занято — добавлять суффикс "(1)", "(2)" и т.д.
+
+12) Удалить файл:
+DELETE /api/files?exercisePath=...&fileName=...
+
+13) Streaming файлов (ОЧЕНЬ ВАЖНО):
+GET /api/files/stream?exercisePath=...&fileName=...
+- Поддержка Range requests (Accept-Ranges: bytes)
+- Корректные статусы 206/200
+- Корректный Content-Type
+- Работает с большими файлами 1GB+
+- Это endpoint используется фронтом для <video src="...">
+
+FRONTEND (простая страница)
+- / (index) — основной UI:
+  - слева панель дерева, сверху кнопка "Добавить раздел"
+  - дерево: клики, раскрытие
+  - справа: карточка упражнения
+    - title (h2)
+    - textarea "Описание" + Save
+    - textarea "Заметки" + Save
+    - блок "Файлы": список
+      - для видео показывать плеер при клике "Открыть" (или сразу если выбран видео)
+      - кнопка Delete возле каждого файла
+    - блок "Загрузить файлы": input multiple + Upload
+- Сделай аккуратный минималистичный CSS (flex layout, фикс ширина левой панели, скроллы).
+- Все запросы через fetch, показывай ошибки (alert или панель ошибок).
+- Покажи лог действий в небольшом area (как консоль) — запросы/ответы (статус).
+
+ОБЯЗАТЕЛЬНО: ПРАВИЛЬНЫЕ MIME
+- Используй Files.probeContentType и fallback по расширению.
+- Для mp4: video/mp4, webm: video/webm, mov: video/quicktime.
+
+ТЕСТЫ (обязательно)
+Сделай набор тестов, которые запускаются командой ./gradlew test или mvn test (выбери один build tool и настрой полностью).
+Тесты должны работать в CI и не требовать реального ./data: используй @TempDir.
+Минимальный набор:
+1) TreeServiceTest: создаёт временную структуру, проверяет, что /api/tree отдаёт правильные узлы и типы.
+2) ExerciseReadTest: проверяет, что GET /api/exercises возвращает text и notes, и список файлов.
+3) ExerciseUpdateTextTest: PUT /api/exercises/text записывает в exercise.json и обновляет updatedAt.
+4) NotesUpdateTest: PUT /api/exercises/notes записывает в notes.md.
+5) UploadFileTest: multipart upload кладёт файл в media/ и возвращает его в списке.
+6) DeleteFileTest: удаление файла реально удаляет его.
+7) PathTraversalProtectionTest: запросы с path="../.." или fileName="../../x" дают 400.
+8) RangeStreamingTest: создаёт большой файл (например 5MB), делает запрос с Range "bytes=0-1023" и проверяет status 206 и длину.
+9) AuthTest: без логина доступ к / и /api/* должен редиректить на /login (или 302), а с логином работает.
+
+СБОРКА/ЗАПУСК
+- Проект должен стартовать одной командой.
+- На старте:
+  - создавай users.txt если нет (ai:1)
+  - создавай demo data если ./data пустая
+- Документация в README.md:
+  - как запустить
+  - где папка data
+  - формат users.txt
+  - как сделать бэкап (просто копировать ./data)
+  - как добавить пользователя
+
+КОД-СТРУКТУРА
+Сделай чистую структуру пакетов:
+- config (security, app props)
+- controller (api)
+- service (tree/exercise/files/users)
+- model (dto)
+- util (path utils)
+Не пиши огромные классы на 1000 строк: раздели на сервисы.
+
+ГЛАВНОЕ
+- Приложение должно реально работать end-to-end.
+- Убедись, что видео можно смотреть в браузере, и перемотка работает (Range).
+- Не усложняй UI: главное стабильность и ясность.
+
+СГЕНЕРИРУЙ ВЕСЬ ПРОЕКТ ЦЕЛИКОМ: backend + frontend + тесты + README.
