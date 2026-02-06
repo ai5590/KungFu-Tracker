@@ -29,6 +29,7 @@ mvn spring-boot:run
 Application runs on port 5000.
 
 ## Recent Changes
+- UI/UX overhaul: responsive mobile layout, collapsible sidebar drawer, breadcrumbs, section folder view, file thumbnails, modal viewer, CSS variables for dark theme, tree state persistence in localStorage
 - Initial creation: Full v1+v2+v3 implementation
 - Tree navigation with sections/exercises
 - File upload/download with Range request streaming for video

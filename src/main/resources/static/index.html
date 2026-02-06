@@ -7,18 +7,32 @@
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
+    <div class="topbar">
+        <button id="sidebarToggle" class="topbar-btn" onclick="toggleSidebar()">&#9776;</button>
+        <h1 class="topbar-title">KungFu Exercises</h1>
+        <a href="/logout" class="topbar-logout">Logout</a>
+    </div>
     <div class="app">
-        <div class="sidebar">
+        <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
+        <aside id="sidebar" class="sidebar">
             <div class="sidebar-header">
-                <h2>KungFu Exercises</h2>
-                <div class="sidebar-actions">
-                    <button onclick="promptCreateSection(null)">+ Section</button>
-                    <a href="/logout" class="btn-logout">Logout</a>
-                </div>
+                <span class="sidebar-heading">Navigator</span>
+                <button class="sidebar-add-btn" onclick="promptCreateSection(null)" title="Add root section">+ Section</button>
             </div>
             <div id="tree" class="tree"></div>
-        </div>
-        <div class="main">
+        </aside>
+        <main class="main">
+            <nav id="breadcrumbs" class="breadcrumbs"></nav>
+            <div id="sectionPanel" class="section-panel" style="display:none">
+                <div class="section-panel-header">
+                    <h2 id="sectionTitle"></h2>
+                    <div class="section-panel-actions">
+                        <button class="btn-sm" onclick="promptRenameSectionFromPanel()">Rename</button>
+                        <button class="btn-sm btn-danger" onclick="promptDeleteSectionFromPanel()">Delete</button>
+                    </div>
+                </div>
+                <div id="sectionContents" class="section-contents"></div>
+            </div>
             <div id="exercisePanel" class="exercise-panel" style="display:none">
                 <div class="exercise-header">
                     <h2 id="exerciseTitle"></h2>
@@ -43,15 +57,24 @@
                         <button onclick="uploadFiles()">Upload</button>
                     </div>
                 </div>
-                <div id="mediaViewer" class="media-viewer" style="display:none"></div>
             </div>
             <div id="placeholder" class="placeholder">
-                <p>Select an exercise from the tree on the left</p>
+                <div class="placeholder-inner">
+                    <div class="placeholder-icon">&#129354;</div>
+                    <p>Select a section or exercise from the tree</p>
+                </div>
             </div>
-        </div>
+        </main>
+    </div>
+    <div id="modal" class="modal" style="display:none" onclick="closeModal(event)">
+        <div class="modal-content" id="modalContent"></div>
+        <button class="modal-close" onclick="closeModalForce()">&times;</button>
     </div>
     <div id="logPanel" class="log-panel">
-        <div class="log-header">Log <button onclick="document.getElementById('logContent').textContent=''">Clear</button></div>
+        <div class="log-header">
+            <span>Log</span>
+            <button onclick="document.getElementById('logContent').textContent=''">Clear</button>
+        </div>
         <pre id="logContent"></pre>
     </div>
     <script src="/js/app.js"></script>

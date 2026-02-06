@@ -69,3 +69,15 @@ mvn test
 - File download
 - User authentication
 - Path traversal protection
+
+## UI/UX (mobile + theme)
+
+- Responsive layout: on screens <= 900px the sidebar becomes a slide-out drawer
+- Toggle button (hamburger) in the top bar to show/hide the sidebar on any screen size
+- Tree state persistence: expanded folders are saved to localStorage and restored on reload
+- Animated tree expand/collapse with arrow indicators
+- Breadcrumbs navigation above the right panel
+- Section folder view: clicking a section shows its contents (sub-sections and exercises) in the right panel
+- File thumbnails: video and image previews shown inline in the file list
+- Modal viewer for opening videos and images full-screen (Esc to close)
+- Dark theme with CSS custom properties ensuring readable text in all inputs/textareas
