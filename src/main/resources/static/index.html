@@ -1,82 +1,129 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KungFu Exercises</title>
+    <title>КунгФу Упражнения</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
     <div class="topbar">
         <button id="sidebarToggle" class="topbar-btn" onclick="toggleSidebar()">&#9776;</button>
-        <h1 class="topbar-title">KungFu Exercises</h1>
-        <a href="/logout" class="topbar-logout">Logout</a>
+        <h1 class="topbar-title">КунгФу Упражнения</h1>
+        <div class="topbar-right">
+            <button id="adminBtn" class="topbar-link" onclick="showAdminPanel()" style="display:none">Админка</button>
+            <button class="topbar-link" onclick="showSettingsModal()">Настроить</button>
+            <a href="/logout" class="topbar-logout">Выйти</a>
+        </div>
     </div>
     <div class="app">
         <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
         <aside id="sidebar" class="sidebar">
-            <div class="sidebar-header">
-                <span class="sidebar-heading">Navigator</span>
-                <button class="sidebar-add-btn" onclick="promptCreateSection(null)" title="Add root section">+ Section</button>
-            </div>
             <div id="tree" class="tree"></div>
         </aside>
+        <div id="resizeHandle" class="resize-handle"></div>
         <main class="main">
             <nav id="breadcrumbs" class="breadcrumbs"></nav>
+
             <div id="sectionPanel" class="section-panel" style="display:none">
                 <div class="section-panel-header">
                     <h2 id="sectionTitle"></h2>
-                    <div class="section-panel-actions">
-                        <button class="btn-sm" onclick="promptRenameSectionFromPanel()">Rename</button>
-                        <button class="btn-sm btn-danger" onclick="promptDeleteSectionFromPanel()">Delete</button>
+                    <div id="sectionActions" class="section-panel-actions">
+                        <button class="btn-sm" onclick="promptAddSubSection()">Добавить папку</button>
+                        <button class="btn-sm" onclick="promptAddExerciseInSection()">Добавить упражнение</button>
+                        <button class="btn-sm" onclick="promptRenameSectionFromPanel()">Переименовать</button>
+                        <button class="btn-sm btn-danger" onclick="promptDeleteSectionFromPanel()">Удалить</button>
                     </div>
                 </div>
                 <div id="sectionContents" class="section-contents"></div>
             </div>
+
             <div id="exercisePanel" class="exercise-panel" style="display:none">
                 <div class="exercise-header">
                     <h2 id="exerciseTitle"></h2>
-                    <button class="btn-sm" onclick="promptRenameExercise()">Rename</button>
-                    <button class="btn-sm btn-danger" onclick="promptDeleteExercise()">Delete</button>
+                    <div id="exerciseActions" class="exercise-actions-bar">
+                        <button class="btn-sm" onclick="promptRenameExercise()">Переименовать</button>
+                        <button class="btn-sm btn-danger" onclick="promptDeleteExercise()">Удалить</button>
+                    </div>
                 </div>
                 <div class="section-block">
-                    <h3>Description</h3>
+                    <h3>Описание</h3>
                     <textarea id="exerciseText" rows="6"></textarea>
-                    <button onclick="saveText()">Save Description</button>
+                    <button class="edit-btn" onclick="saveText()">Сохранить описание</button>
                 </div>
                 <div class="section-block">
-                    <h3>Notes</h3>
+                    <h3>Заметки</h3>
                     <textarea id="exerciseNotes" rows="6"></textarea>
-                    <button onclick="saveNotes()">Save Notes</button>
+                    <button class="edit-btn" onclick="saveNotes()">Сохранить заметки</button>
                 </div>
                 <div class="section-block">
-                    <h3>Files</h3>
+                    <h3>Файлы</h3>
                     <div id="fileList" class="file-list"></div>
-                    <div class="upload-area">
+                    <div id="uploadArea" class="upload-area">
                         <input type="file" id="fileInput" multiple>
-                        <button onclick="uploadFiles()">Upload</button>
+                        <button onclick="uploadFiles()">Загрузить</button>
                     </div>
                 </div>
             </div>
+
+            <div id="rootPanel" class="section-panel" style="display:none">
+                <div class="section-panel-header">
+                    <h2>Разделы</h2>
+                </div>
+                <div id="rootContents" class="section-contents"></div>
+            </div>
+
+            <div id="adminPanel" class="admin-panel" style="display:none">
+                <div class="section-panel-header">
+                    <h2>Управление пользователями</h2>
+                    <button class="btn-sm" onclick="closeAdminPanel()">Назад</button>
+                </div>
+                <div id="adminUserList" class="admin-user-list"></div>
+                <div class="admin-add-user">
+                    <h3>Добавить пользователя</h3>
+                    <div class="admin-form">
+                        <input type="text" id="newUserLogin" placeholder="Логин">
+                        <input type="text" id="newUserPassword" placeholder="Пароль">
+                        <label class="checkbox-label"><input type="checkbox" id="newUserAdmin"> Администратор</label>
+                        <label class="checkbox-label"><input type="checkbox" id="newUserCanEdit" checked> Редактирование</label>
+                        <button class="edit-btn" onclick="addUser()">Сохранить</button>
+                    </div>
+                </div>
+            </div>
+
             <div id="placeholder" class="placeholder">
                 <div class="placeholder-inner">
                     <div class="placeholder-icon">&#129354;</div>
-                    <p>Select a section or exercise from the tree</p>
+                    <p>Выберите раздел или упражнение</p>
                 </div>
             </div>
         </main>
     </div>
+
+    <button id="fab" class="fab" onclick="toggleFabMenu()" style="display:none">+</button>
+    <div id="fabMenu" class="fab-menu" style="display:none">
+        <button onclick="fabAddSection()">Добавить папку</button>
+        <button onclick="fabAddExercise()">Добавить упражнение</button>
+    </div>
+
     <div id="modal" class="modal" style="display:none" onclick="closeModal(event)">
         <div class="modal-content" id="modalContent"></div>
         <button class="modal-close" onclick="closeModalForce()">&times;</button>
     </div>
-    <div id="logPanel" class="log-panel">
-        <div class="log-header">
-            <span>Log</span>
-            <button onclick="document.getElementById('logContent').textContent=''">Clear</button>
+
+    <div id="settingsModal" class="settings-modal-overlay" style="display:none">
+        <div class="settings-modal">
+            <h3>Сменить пароль</h3>
+            <input type="password" id="oldPassword" placeholder="Старый пароль">
+            <input type="password" id="newPassword" placeholder="Новый пароль">
+            <input type="password" id="confirmPassword" placeholder="Повтор нового пароля">
+            <div class="settings-actions">
+                <button class="edit-btn" onclick="changeMyPassword()">Сохранить</button>
+                <button class="btn-sm" onclick="closeSettingsModal()">Отмена</button>
+            </div>
         </div>
-        <pre id="logContent"></pre>
     </div>
+
     <script src="/js/app.js"></script>
 </body>
 </html>

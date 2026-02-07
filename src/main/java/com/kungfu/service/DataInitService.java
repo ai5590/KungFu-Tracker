@@ -20,15 +20,15 @@ public class DataInitService {
     @Value("${app.data-dir}")
     private String dataDir;
 
-    @Value("${app.users-file}")
-    private String usersFile;
+    private final UserService userService;
+
+    public DataInitService(UserService userService) {
+        this.userService = userService;
+    }
 
     @PostConstruct
     public void init() throws IOException {
-        Path usersPath = Path.of(usersFile);
-        if (!Files.exists(usersPath)) {
-            Files.writeString(usersPath, "ai:1\n", StandardCharsets.UTF_8);
-        }
+        userService.initAndMigrate();
 
         Path dataRoot = Path.of(dataDir);
         Files.createDirectories(dataRoot);

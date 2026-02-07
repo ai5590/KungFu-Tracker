@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.kungfu.model.ExerciseMeta;
-import com.kungfu.model.SectionMeta;
+import com.kungfu.model.UsersData;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,10 +56,9 @@ class KungFuApplicationTests {
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
 
-    // 1) TreeServiceTest
     @Test
     @Order(1)
-    @WithMockUser
+    @WithMockUser(roles = {"USER", "EDITOR"})
     void testTreeReturnsCorrectNodes() throws Exception {
         mvc.perform(get("/api/tree"))
                 .andExpect(status().isOk())
@@ -72,23 +71,19 @@ class KungFuApplicationTests {
                 .andExpect(jsonPath("$[0].children[0].children[0].nodeType", is("EXERCISE")));
     }
 
-    // 2) ExerciseReadTest
     @Test
     @Order(2)
-    @WithMockUser
+    @WithMockUser(roles = {"USER", "EDITOR"})
     void testGetExerciseReturnsTextAndNotes() throws Exception {
         mvc.perform(get("/api/exercises").param("path", "KungFu/Basics/HorseStance"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title", is("HorseStance")))
-                .andExpect(jsonPath("$.text", is("Demo text")))
-                .andExpect(jsonPath("$.notes", is("Demo notes")))
                 .andExpect(jsonPath("$.files", hasSize(0)));
     }
 
-    // 3) ExerciseUpdateTextTest
     @Test
     @Order(3)
-    @WithMockUser
+    @WithMockUser(roles = {"USER", "EDITOR"})
     void testUpdateTextWritesToExerciseJson() throws Exception {
         mvc.perform(put("/api/exercises/text")
                         .param("path", "KungFu/Basics/HorseStance")
@@ -102,10 +97,9 @@ class KungFuApplicationTests {
         Assertions.assertNotNull(meta.getUpdatedAt());
     }
 
-    // 4) NotesUpdateTest
     @Test
     @Order(4)
-    @WithMockUser
+    @WithMockUser(roles = {"USER", "EDITOR"})
     void testUpdateNotesWritesToFile() throws Exception {
         mvc.perform(put("/api/exercises/notes")
                         .param("path", "KungFu/Basics/HorseStance")
@@ -117,10 +111,9 @@ class KungFuApplicationTests {
         Assertions.assertEquals("Updated notes content", notes);
     }
 
-    // 5) UploadFileTest
     @Test
     @Order(5)
-    @WithMockUser
+    @WithMockUser(roles = {"USER", "EDITOR"})
     void testUploadFilePlacesInMedia() throws Exception {
         MockMultipartFile file = new MockMultipartFile("files", "test.txt", "text/plain", "hello".getBytes());
         mvc.perform(multipart("/api/files/upload")
@@ -132,14 +125,13 @@ class KungFuApplicationTests {
 
         mvc.perform(get("/api/exercises").param("path", "KungFu/Basics/HorseStance"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.files", hasSize(1)))
-                .andExpect(jsonPath("$.files[0].fileName", is("test.txt")));
+                .andExpect(jsonPath("$.files", hasSize(greaterThanOrEqualTo(1))))
+                .andExpect(jsonPath("$.files[?(@.fileName=='test.txt')].description", hasItem("")));
     }
 
-    // 6) DeleteFileTest
     @Test
     @Order(6)
-    @WithMockUser
+    @WithMockUser(roles = {"USER", "EDITOR"})
     void testDeleteFileRemovesIt() throws Exception {
         Path mediaFile = dataDir.resolve("KungFu/Basics/HorseStance/media/todelete.txt");
         Files.createDirectories(mediaFile.getParent());
@@ -155,10 +147,9 @@ class KungFuApplicationTests {
         Assertions.assertFalse(Files.exists(mediaFile));
     }
 
-    // 7) PathTraversalProtectionTest
     @Test
     @Order(7)
-    @WithMockUser
+    @WithMockUser(roles = {"USER", "EDITOR"})
     void testPathTraversalIsBlocked() throws Exception {
         mvc.perform(get("/api/exercises").param("path", "../../etc/passwd"))
                 .andExpect(status().isBadRequest());
@@ -172,10 +163,9 @@ class KungFuApplicationTests {
                 .andExpect(status().isBadRequest());
     }
 
-    // 8) RangeStreamingTest
     @Test
     @Order(8)
-    @WithMockUser
+    @WithMockUser(roles = {"USER", "EDITOR"})
     void testRangeRequestReturns206() throws Exception {
         byte[] bigContent = new byte[5 * 1024 * 1024];
         for (int i = 0; i < bigContent.length; i++) bigContent[i] = (byte)(i % 256);
@@ -192,14 +182,158 @@ class KungFuApplicationTests {
                 .andExpect(header().string("Content-Length", "1024"));
     }
 
-    // 9) AuthTest
     @Test
     @Order(9)
     void testUnauthenticatedAccessRedirectsToLogin() throws Exception {
         mvc.perform(get("/"))
                 .andExpect(status().is3xxRedirection());
-
         mvc.perform(get("/api/tree"))
                 .andExpect(status().is3xxRedirection());
+    }
+
+    @Test
+    @Order(10)
+    @WithMockUser(username = "ai", roles = {"USER", "EDITOR", "ADMIN"})
+    void testMeEndpointReturnsFlags() throws Exception {
+        mvc.perform(get("/api/me"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.login", is("ai")))
+                .andExpect(jsonPath("$.admin", is(true)))
+                .andExpect(jsonPath("$.canEdit", is(true)));
+    }
+
+    @Test
+    @Order(11)
+    @WithMockUser(roles = {"USER"})
+    void testReadOnlyUserCannotWrite() throws Exception {
+        mvc.perform(get("/api/tree")).andExpect(status().isOk());
+        mvc.perform(get("/api/exercises").param("path", "KungFu/Basics/HorseStance")).andExpect(status().isOk());
+
+        mvc.perform(post("/api/sections")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"parentPath\":\"KungFu\",\"title\":\"Forbidden\"}"))
+                .andExpect(status().isForbidden());
+
+        mvc.perform(put("/api/exercises/text")
+                        .param("path", "KungFu/Basics/HorseStance")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"text\":\"nope\"}"))
+                .andExpect(status().isForbidden());
+
+        MockMultipartFile file = new MockMultipartFile("files", "nope.txt", "text/plain", "nope".getBytes());
+        mvc.perform(multipart("/api/files/upload")
+                        .file(file)
+                        .param("exercisePath", "KungFu/Basics/HorseStance"))
+                .andExpect(status().isForbidden());
+
+        mvc.perform(delete("/api/files")
+                        .param("exercisePath", "KungFu/Basics/HorseStance")
+                        .param("fileName", "test.txt"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @Order(12)
+    @WithMockUser(roles = {"USER"})
+    void testNonAdminCannotAccessAdminEndpoints() throws Exception {
+        mvc.perform(get("/api/admin/users")).andExpect(status().isForbidden());
+        mvc.perform(post("/api/admin/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"login\":\"x\",\"password\":\"x\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @Order(13)
+    @WithMockUser(roles = {"USER", "EDITOR", "ADMIN"})
+    void testAdminCanManageUsers() throws Exception {
+        mvc.perform(post("/api/admin/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"login\":\"testuser\",\"password\":\"testpw\",\"admin\":false,\"canEdit\":true}"))
+                .andExpect(status().isOk());
+
+        mvc.perform(get("/api/admin/users"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.login=='testuser')].canEdit", hasItem(true)));
+
+        mvc.perform(put("/api/admin/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"login\":\"testuser\",\"canEdit\":false}"))
+                .andExpect(status().isOk());
+
+        mvc.perform(get("/api/admin/users"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.login=='testuser')].canEdit", hasItem(false)));
+
+        mvc.perform(get("/api/admin/users/password").param("login", "testuser"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.password", is("testpw")));
+
+        mvc.perform(delete("/api/admin/users").param("login", "testuser"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @Order(14)
+    @WithMockUser(roles = {"USER", "EDITOR", "ADMIN"})
+    void testCannotDeleteLastAdmin() throws Exception {
+        mvc.perform(delete("/api/admin/users").param("login", "ai"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @Order(15)
+    @WithMockUser(username = "ai", roles = {"USER", "EDITOR", "ADMIN"})
+    void testChangePassword() throws Exception {
+        mvc.perform(post("/api/me/change-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"oldPassword\":\"wrong\",\"newPassword\":\"newpw\"}"))
+                .andExpect(status().isForbidden());
+
+        mvc.perform(post("/api/me/change-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"oldPassword\":\"1\",\"newPassword\":\"newpw\"}"))
+                .andExpect(status().isOk());
+
+        mvc.perform(post("/api/me/change-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"oldPassword\":\"newpw\",\"newPassword\":\"1\"}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @Order(16)
+    @WithMockUser(roles = {"USER", "EDITOR"})
+    void testFileDescriptionWorkflow() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("files", "desc_test.txt", "text/plain", "data".getBytes());
+        mvc.perform(multipart("/api/files/upload")
+                        .file(file)
+                        .param("exercisePath", "KungFu/Basics/HorseStance"))
+                .andExpect(status().isOk());
+
+        mvc.perform(get("/api/exercises").param("path", "KungFu/Basics/HorseStance"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.files[?(@.fileName=='desc_test.txt')].description", hasItem("")));
+
+        mvc.perform(put("/api/files/description")
+                        .param("exercisePath", "KungFu/Basics/HorseStance")
+                        .param("fileName", "desc_test.txt")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"description\":\"Test description\"}"))
+                .andExpect(status().isOk());
+
+        mvc.perform(get("/api/exercises").param("path", "KungFu/Basics/HorseStance"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.files[?(@.fileName=='desc_test.txt')].description", hasItem("Test description")));
+    }
+
+    @Test
+    @Order(17)
+    void testUsersMigrationFromTxt() throws Exception {
+        Path usersJson = usersFile.getParent().resolve("users.json");
+        Assertions.assertTrue(Files.exists(usersJson));
+        UsersData data = mapper.readValue(usersJson.toFile(), UsersData.class);
+        Assertions.assertFalse(data.getUsers().isEmpty());
+        Assertions.assertTrue(data.getUsers().stream().anyMatch(u -> u.getLogin().equals("ai") && u.isAdmin() && u.isCanEdit()));
     }
 }

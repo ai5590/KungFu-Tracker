@@ -3,9 +3,7 @@ package com.kungfu.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.kungfu.model.ExerciseMeta;
-import com.kungfu.model.ExerciseView;
-import com.kungfu.model.FileInfo;
+import com.kungfu.model.*;
 import com.kungfu.util.PathUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -19,8 +17,8 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ExerciseService {
@@ -70,6 +68,12 @@ public class ExerciseService {
         List<FileInfo> files = new ArrayList<>();
         if (!Files.exists(mediaDir)) return files;
 
+        FilesData filesData = syncFilesJson(dir);
+        Map<String, FileMeta> metaMap = new HashMap<>();
+        for (FileMeta fm : filesData.getFiles()) {
+            metaMap.put(fm.getFileName(), fm);
+        }
+
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(mediaDir)) {
             for (Path f : stream) {
                 if (Files.isRegularFile(f)) {
@@ -79,11 +83,88 @@ public class ExerciseService {
                     String encodedPath = URLEncoder.encode(exercisePath, StandardCharsets.UTF_8);
                     String encodedName = URLEncoder.encode(fileName, StandardCharsets.UTF_8);
                     String url = "/api/files/stream?exercisePath=" + encodedPath + "&fileName=" + encodedName;
-                    files.add(new FileInfo(fileName, size, contentType, url));
+                    FileMeta fm = metaMap.get(fileName);
+                    String description = fm != null ? fm.getDescription() : "";
+                    files.add(new FileInfo(fileName, size, contentType, url, description));
                 }
             }
         }
         return files;
+    }
+
+    public FilesData syncFilesJson(Path exerciseDir) throws IOException {
+        Path filesJsonPath = exerciseDir.resolve("files.json");
+        Path mediaDir = exerciseDir.resolve("media");
+
+        FilesData data;
+        if (Files.exists(filesJsonPath)) {
+            data = mapper.readValue(filesJsonPath.toFile(), FilesData.class);
+        } else {
+            data = new FilesData();
+        }
+
+        Set<String> actualFiles = new HashSet<>();
+        if (Files.exists(mediaDir)) {
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(mediaDir)) {
+                for (Path f : stream) {
+                    if (Files.isRegularFile(f)) {
+                        actualFiles.add(f.getFileName().toString());
+                    }
+                }
+            }
+        }
+
+        Set<String> knownFiles = data.getFiles().stream()
+                .map(FileMeta::getFileName)
+                .collect(Collectors.toSet());
+
+        boolean changed = false;
+
+        data.getFiles().removeIf(fm -> {
+            if (!actualFiles.contains(fm.getFileName())) {
+                return true;
+            }
+            return false;
+        });
+        if (data.getFiles().size() != knownFiles.size()) {
+            changed = true;
+        }
+
+        for (String actual : actualFiles) {
+            if (!knownFiles.contains(actual)) {
+                data.getFiles().add(new FileMeta(actual, ""));
+                changed = true;
+            }
+        }
+
+        if (changed) {
+            mapper.writerWithDefaultPrettyPrinter().writeValue(filesJsonPath.toFile(), data);
+        }
+
+        return data;
+    }
+
+    public void updateFileDescription(String exercisePath, String fileName, String description) throws IOException {
+        Path dir = PathUtil.resolveAndValidate(dataRoot, exercisePath);
+        if (!Files.exists(dir.resolve("exercise.json"))) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Exercise not found");
+        }
+        PathUtil.validateFileName(fileName);
+
+        FilesData data = syncFilesJson(dir);
+        boolean found = false;
+        for (FileMeta fm : data.getFiles()) {
+            if (fm.getFileName().equals(fileName)) {
+                fm.setDescription(description);
+                fm.setUpdatedAt(Instant.now());
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found in metadata");
+        }
+        mapper.writerWithDefaultPrettyPrinter().writeValue(dir.resolve("files.json").toFile(), data);
     }
 
     public void updateText(String exercisePath, String text) throws IOException {

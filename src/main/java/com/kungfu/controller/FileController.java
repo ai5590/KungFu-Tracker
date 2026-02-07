@@ -4,7 +4,6 @@ import com.kungfu.service.ExerciseService;
 import com.kungfu.service.FileService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,9 +20,11 @@ import java.util.Map;
 public class FileController {
 
     private final FileService fileService;
+    private final ExerciseService exerciseService;
 
-    public FileController(FileService fileService) {
+    public FileController(FileService fileService, ExerciseService exerciseService) {
         this.fileService = fileService;
+        this.exerciseService = exerciseService;
     }
 
     @PostMapping("/upload")
@@ -37,6 +38,15 @@ public class FileController {
     public ResponseEntity<?> deleteFile(@RequestParam String exercisePath,
                                         @RequestParam String fileName) throws IOException {
         fileService.deleteFile(exercisePath, fileName);
+        return ResponseEntity.ok(Map.of("status", "ok"));
+    }
+
+    @PutMapping("/description")
+    public ResponseEntity<?> updateDescription(@RequestParam String exercisePath,
+                                               @RequestParam String fileName,
+                                               @RequestBody Map<String, String> body) throws IOException {
+        String description = body.get("description");
+        exerciseService.updateFileDescription(exercisePath, fileName, description != null ? description : "");
         return ResponseEntity.ok(Map.of("status", "ok"));
     }
 
