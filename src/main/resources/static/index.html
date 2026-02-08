@@ -119,21 +119,42 @@
 
     <div id="settingsModal" class="settings-modal-overlay" style="display:none">
         <div class="settings-modal">
-            <h3>Настройки</h3>
-            <div class="settings-tabs">
-                <button class="settings-tab active" onclick="switchSettingsTab('password', this)">Сменить пароль</button>
-                <button class="settings-tab" onclick="switchSettingsTab('theme', this)">Цветовая схема</button>
+            <div id="settingsMenu" class="settings-view">
+                <h3>Настройки</h3>
+                <div class="settings-menu-list">
+                    <button class="settings-menu-item" onclick="openSettingsPage('password')">
+                        <span class="settings-menu-icon">&#128274;</span>
+                        <span class="settings-menu-text">Сменить пароль</span>
+                        <span class="settings-menu-arrow">&#8250;</span>
+                    </button>
+                    <button class="settings-menu-item" onclick="openSettingsPage('theme')">
+                        <span class="settings-menu-icon">&#127912;</span>
+                        <span class="settings-menu-text">Цветовая схема</span>
+                        <span class="settings-menu-arrow">&#8250;</span>
+                    </button>
+                </div>
+                <div class="settings-actions">
+                    <button class="btn-sm" onclick="closeSettingsModal()">Закрыть</button>
+                </div>
             </div>
-            <div id="settingsPassword" class="settings-section active">
+            <div id="settingsPasswordPage" class="settings-view" style="display:none">
+                <div class="settings-page-header">
+                    <button class="settings-back-btn" onclick="backToSettingsMenu()">&#8249; Назад</button>
+                    <h3>Сменить пароль</h3>
+                </div>
                 <input type="password" id="oldPassword" placeholder="Старый пароль">
                 <input type="password" id="newPassword" placeholder="Новый пароль">
                 <input type="password" id="confirmPassword" placeholder="Повтор нового пароля">
                 <div class="settings-actions">
                     <button class="edit-btn" onclick="changeMyPassword()">Сохранить</button>
-                    <button class="btn-sm" onclick="closeSettingsModal()">Отмена</button>
+                    <button class="btn-sm" onclick="backToSettingsMenu()">Отмена</button>
                 </div>
             </div>
-            <div id="settingsTheme" class="settings-section">
+            <div id="settingsThemePage" class="settings-view" style="display:none">
+                <div class="settings-page-header">
+                    <button class="settings-back-btn" onclick="backToSettingsMenu()">&#8249; Назад</button>
+                    <h3>Цветовая схема</h3>
+                </div>
                 <div class="theme-grid">
                     <div class="theme-card" onclick="setTheme('light')">
                         <div class="theme-card-preview">
@@ -169,7 +190,7 @@
                     </div>
                 </div>
                 <div class="settings-actions">
-                    <button class="btn-sm" onclick="closeSettingsModal()">Закрыть</button>
+                    <button class="btn-sm" onclick="backToSettingsMenu()">Назад</button>
                 </div>
             </div>
         </div>

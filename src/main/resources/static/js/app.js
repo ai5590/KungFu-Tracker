@@ -84,6 +84,14 @@ async function fetchMe() {
         } else {
             document.getElementById('fab').style.display = 'none';
         }
+        if (data.theme) {
+            localStorage.setItem(STORAGE_KEY_THEME, data.theme);
+            if (data.theme === 'midnight') {
+                document.documentElement.removeAttribute('data-theme');
+            } else {
+                document.documentElement.setAttribute('data-theme', data.theme);
+            }
+        }
     }
 }
 
@@ -889,26 +897,31 @@ async function addUser() {
 
 function showSettingsModal() {
     document.getElementById('settingsModal').style.display = 'flex';
-    document.getElementById('oldPassword').value = '';
-    document.getElementById('newPassword').value = '';
-    document.getElementById('confirmPassword').value = '';
-    switchSettingsTab('password', document.querySelector('.settings-tab'));
-    updateThemeCards();
+    backToSettingsMenu();
 }
 
 function closeSettingsModal() {
     document.getElementById('settingsModal').style.display = 'none';
 }
 
-function switchSettingsTab(tab, btnEl) {
-    document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
-    btnEl.classList.add('active');
-    if (tab === 'password') {
-        document.getElementById('settingsPassword').classList.add('active');
+function backToSettingsMenu() {
+    document.getElementById('settingsMenu').style.display = '';
+    document.getElementById('settingsPasswordPage').style.display = 'none';
+    document.getElementById('settingsThemePage').style.display = 'none';
+}
+
+function openSettingsPage(page) {
+    document.getElementById('settingsMenu').style.display = 'none';
+    if (page === 'password') {
+        document.getElementById('settingsPasswordPage').style.display = '';
+        document.getElementById('settingsThemePage').style.display = 'none';
+        document.getElementById('oldPassword').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
         document.getElementById('oldPassword').focus();
     } else {
-        document.getElementById('settingsTheme').classList.add('active');
+        document.getElementById('settingsPasswordPage').style.display = 'none';
+        document.getElementById('settingsThemePage').style.display = '';
         updateThemeCards();
     }
 }
@@ -917,7 +930,7 @@ function getCurrentTheme() {
     return localStorage.getItem(STORAGE_KEY_THEME) || 'midnight';
 }
 
-function setTheme(theme) {
+async function setTheme(theme) {
     if (theme === 'midnight') {
         document.documentElement.removeAttribute('data-theme');
     } else {
@@ -925,6 +938,11 @@ function setTheme(theme) {
     }
     localStorage.setItem(STORAGE_KEY_THEME, theme);
     updateThemeCards();
+    await api('/api/me/theme', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme: theme })
+    });
 }
 
 function updateThemeCards() {

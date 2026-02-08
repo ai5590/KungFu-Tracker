@@ -5,6 +5,7 @@ public class UserEntry {
     private String password;
     private boolean admin;
     private boolean canEdit;
+    private String theme;
 
     public UserEntry() {}
 
@@ -23,4 +24,6 @@ public class UserEntry {
     public void setAdmin(boolean admin) { this.admin = admin; }
     public boolean isCanEdit() { return canEdit; }
     public void setCanEdit(boolean canEdit) { this.canEdit = canEdit; }
+    public String getTheme() { return theme; }
+    public void setTheme(String theme) { this.theme = theme; }
 }

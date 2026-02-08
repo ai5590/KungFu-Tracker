@@ -46,11 +46,12 @@ On first run with empty data folder, default user `admin:admin` is created.
 - Default fresh install user: admin / admin
 
 ## Color Themes
-4 themes stored in localStorage (key: kf_theme_v1):
+4 themes stored per-user in users.json (`theme` field), also cached in localStorage (key: kf_theme_v1) for instant page load:
 - **Полночь** (Midnight) — default, dark navy blue
 - **Светлая** (Light) — white/gray
 - **Тёмная** (Dark) — pure dark with purple accent
 - **Сакура** (Sakura) — warm rose/purple
+Server is source of truth; theme synced from server on login via GET /api/me, saved via POST /api/me/theme.
 
 ## File Metadata
 Each exercise directory can have a `files.json` alongside `exercise.json`, `notes.md`, and `media/`. The `files.json` tracks file descriptions and timestamps, auto-syncs with actual files in `media/`.
@@ -58,8 +59,9 @@ Each exercise directory can have a `files.json` alongside `exercise.json`, `note
 ## Recent Changes
 - Case-insensitive login (all usernames normalized to lowercase)
 - Default user changed to admin:admin for fresh installs
-- Settings modal with tabs: password change + color theme picker
-- 4 color themes: Светлая, Полночь, Тёмная, Сакура (persisted in localStorage)
+- Settings modal redesigned as multi-level menu (main menu → sub-pages with back navigation)
+- Per-user color theme storage in users.json (theme field), server-validated whitelist
+- 4 color themes: Светлая, Полночь, Тёмная, Сакура
 - Dockerfile for standalone deployment with external data volume
 - RBAC: 3-level user roles (admin, editor, viewer) with users.json and migration from users.txt
 - Admin panel for user management (add/remove users, toggle flags, change passwords)

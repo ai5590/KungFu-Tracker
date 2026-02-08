@@ -178,6 +178,18 @@ public class UserService implements UserDetailsService {
         saveData(data);
     }
 
+    public synchronized void setUserTheme(String login, String theme) throws IOException {
+        UsersData data = loadData();
+        for (UserEntry u : data.getUsers()) {
+            if (u.getLogin().equalsIgnoreCase(login)) {
+                u.setTheme(theme);
+                saveData(data);
+                return;
+            }
+        }
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+    }
+
     public String getUserPassword(String login) throws IOException {
         UserEntry u = findUser(login);
         if (u == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");

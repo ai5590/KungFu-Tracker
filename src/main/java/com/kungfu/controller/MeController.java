@@ -28,11 +28,12 @@ public class MeController {
         if (user == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
-        return Map.of(
-            "login", user.getLogin(),
-            "admin", user.isAdmin(),
-            "canEdit", user.isCanEdit()
-        );
+        var result = new java.util.HashMap<String, Object>();
+        result.put("login", user.getLogin());
+        result.put("admin", user.isAdmin());
+        result.put("canEdit", user.isCanEdit());
+        result.put("theme", user.getTheme() != null ? user.getTheme() : "midnight");
+        return result;
     }
 
     @PostMapping("/change-password")
@@ -54,6 +55,19 @@ public class MeController {
         }
 
         userService.changePassword(login, newPassword);
+        return ResponseEntity.ok(Map.of("status", "ok"));
+    }
+
+    private static final java.util.Set<String> VALID_THEMES = java.util.Set.of("light", "midnight", "dark", "sakura");
+
+    @PostMapping("/theme")
+    public ResponseEntity<?> setTheme(Authentication auth, @RequestBody Map<String, String> body) throws IOException {
+        String login = auth.getName();
+        String theme = body.get("theme");
+        if (theme == null || theme.isBlank() || !VALID_THEMES.contains(theme)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid theme");
+        }
+        userService.setUserTheme(login, theme);
         return ResponseEntity.ok(Map.of("status", "ok"));
     }
 }
