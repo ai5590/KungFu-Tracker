@@ -1,6 +1,7 @@
 const STORAGE_KEY_EXPANDED = 'kf_tree_expanded_v1';
 const STORAGE_KEY_SELECTED = 'kf_selected_path_v1';
 const STORAGE_KEY_SIDEBAR_W = 'kf_sidebar_width_v1';
+const STORAGE_KEY_THEME = 'kf_theme_v1';
 
 const appState = {
     selectedPath: null,
@@ -891,11 +892,57 @@ function showSettingsModal() {
     document.getElementById('oldPassword').value = '';
     document.getElementById('newPassword').value = '';
     document.getElementById('confirmPassword').value = '';
-    document.getElementById('oldPassword').focus();
+    switchSettingsTab('password', document.querySelector('.settings-tab'));
+    updateThemeCards();
 }
 
 function closeSettingsModal() {
     document.getElementById('settingsModal').style.display = 'none';
+}
+
+function switchSettingsTab(tab, btnEl) {
+    document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+    btnEl.classList.add('active');
+    if (tab === 'password') {
+        document.getElementById('settingsPassword').classList.add('active');
+        document.getElementById('oldPassword').focus();
+    } else {
+        document.getElementById('settingsTheme').classList.add('active');
+        updateThemeCards();
+    }
+}
+
+function getCurrentTheme() {
+    return localStorage.getItem(STORAGE_KEY_THEME) || 'midnight';
+}
+
+function setTheme(theme) {
+    if (theme === 'midnight') {
+        document.documentElement.removeAttribute('data-theme');
+    } else {
+        document.documentElement.setAttribute('data-theme', theme);
+    }
+    localStorage.setItem(STORAGE_KEY_THEME, theme);
+    updateThemeCards();
+}
+
+function updateThemeCards() {
+    const current = getCurrentTheme();
+    document.querySelectorAll('.theme-card').forEach(card => {
+        const onclick = card.getAttribute('onclick');
+        const match = onclick && onclick.match(/setTheme\('(\w+)'\)/);
+        if (match) {
+            card.classList.toggle('active', match[1] === current);
+        }
+    });
+}
+
+function applyStoredTheme() {
+    const theme = getCurrentTheme();
+    if (theme && theme !== 'midnight') {
+        document.documentElement.setAttribute('data-theme', theme);
+    }
 }
 
 async function changeMyPassword() {
@@ -966,6 +1013,7 @@ document.addEventListener('click', (e) => {
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
+    applyStoredTheme();
     restoreTreeState();
     initResizeHandle();
     await fetchMe();

@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>КунгФу Упражнения</title>
+    <script>
+        (function(){
+            var t = localStorage.getItem('kf_theme_v1');
+            if (t && t !== 'midnight') document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -113,13 +119,58 @@
 
     <div id="settingsModal" class="settings-modal-overlay" style="display:none">
         <div class="settings-modal">
-            <h3>Сменить пароль</h3>
-            <input type="password" id="oldPassword" placeholder="Старый пароль">
-            <input type="password" id="newPassword" placeholder="Новый пароль">
-            <input type="password" id="confirmPassword" placeholder="Повтор нового пароля">
-            <div class="settings-actions">
-                <button class="edit-btn" onclick="changeMyPassword()">Сохранить</button>
-                <button class="btn-sm" onclick="closeSettingsModal()">Отмена</button>
+            <h3>Настройки</h3>
+            <div class="settings-tabs">
+                <button class="settings-tab active" onclick="switchSettingsTab('password', this)">Сменить пароль</button>
+                <button class="settings-tab" onclick="switchSettingsTab('theme', this)">Цветовая схема</button>
+            </div>
+            <div id="settingsPassword" class="settings-section active">
+                <input type="password" id="oldPassword" placeholder="Старый пароль">
+                <input type="password" id="newPassword" placeholder="Новый пароль">
+                <input type="password" id="confirmPassword" placeholder="Повтор нового пароля">
+                <div class="settings-actions">
+                    <button class="edit-btn" onclick="changeMyPassword()">Сохранить</button>
+                    <button class="btn-sm" onclick="closeSettingsModal()">Отмена</button>
+                </div>
+            </div>
+            <div id="settingsTheme" class="settings-section">
+                <div class="theme-grid">
+                    <div class="theme-card" onclick="setTheme('light')">
+                        <div class="theme-card-preview">
+                            <div style="background:#f0f2f5"></div>
+                            <div style="background:#ffffff"></div>
+                            <div style="background:#e94560"></div>
+                        </div>
+                        <div class="theme-card-name">Светлая</div>
+                    </div>
+                    <div class="theme-card" onclick="setTheme('midnight')">
+                        <div class="theme-card-preview">
+                            <div style="background:#1a1a2e"></div>
+                            <div style="background:#16213e"></div>
+                            <div style="background:#e94560"></div>
+                        </div>
+                        <div class="theme-card-name">Полночь</div>
+                    </div>
+                    <div class="theme-card" onclick="setTheme('dark')">
+                        <div class="theme-card-preview">
+                            <div style="background:#121212"></div>
+                            <div style="background:#1e1e1e"></div>
+                            <div style="background:#bb86fc"></div>
+                        </div>
+                        <div class="theme-card-name">Тёмная</div>
+                    </div>
+                    <div class="theme-card" onclick="setTheme('sakura')">
+                        <div class="theme-card-preview">
+                            <div style="background:#2d1b2e"></div>
+                            <div style="background:#3a2240"></div>
+                            <div style="background:#ff7eb3"></div>
+                        </div>
+                        <div class="theme-card-name">Сакура</div>
+                    </div>
+                </div>
+                <div class="settings-actions">
+                    <button class="btn-sm" onclick="closeSettingsModal()">Закрыть</button>
+                </div>
             </div>
         </div>
     </div>

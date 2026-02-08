@@ -1,0 +1,10 @@
+target/
+data/
+users.json
+users.txt
+.git
+.gitignore
+*.md
+.replit
+replit.nix
+replit.md

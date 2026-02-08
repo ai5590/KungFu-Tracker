@@ -57,15 +57,15 @@ public class UserService implements UserDetailsService {
                 if (line.isEmpty() || line.startsWith("#")) continue;
                 String[] parts = line.split(":", 2);
                 if (parts.length == 2) {
-                    String login = parts[0].trim();
+                    String login = parts[0].trim().toLowerCase();
                     String password = parts[1].trim();
-                    boolean isAdmin = login.equals("ai");
+                    boolean isAdmin = login.equalsIgnoreCase("ai");
                     data.getUsers().add(new UserEntry(login, password, isAdmin, true));
                 }
             }
         }
         if (data.getUsers().isEmpty()) {
-            data.getUsers().add(new UserEntry("ai", "1", true, true));
+            data.getUsers().add(new UserEntry("admin", "admin", true, true));
         }
         data.setUpdatedAt(Instant.now());
         saveData(data);
@@ -97,7 +97,7 @@ public class UserService implements UserDetailsService {
         try {
             UsersData data = loadData();
             for (UserEntry u : data.getUsers()) {
-                if (u.getLogin().equals(username)) {
+                if (u.getLogin().equalsIgnoreCase(username)) {
                     List<String> roles = new ArrayList<>();
                     roles.add("USER");
                     if (u.isCanEdit()) roles.add("EDITOR");
@@ -118,7 +118,7 @@ public class UserService implements UserDetailsService {
     public UserEntry findUser(String login) throws IOException {
         UsersData data = loadData();
         for (UserEntry u : data.getUsers()) {
-            if (u.getLogin().equals(login)) return u;
+            if (u.getLogin().equalsIgnoreCase(login)) return u;
         }
         return null;
     }
@@ -130,18 +130,18 @@ public class UserService implements UserDetailsService {
     public synchronized void addUser(String login, String password, boolean admin, boolean canEdit) throws IOException {
         UsersData data = loadData();
         for (UserEntry u : data.getUsers()) {
-            if (u.getLogin().equals(login)) {
+            if (u.getLogin().equalsIgnoreCase(login)) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "User already exists");
             }
         }
-        data.getUsers().add(new UserEntry(login, password, admin, canEdit));
+        data.getUsers().add(new UserEntry(login.toLowerCase(), password, admin, canEdit));
         saveData(data);
     }
 
     public synchronized void updateUser(String login, Boolean admin, Boolean canEdit) throws IOException {
         UsersData data = loadData();
         for (UserEntry u : data.getUsers()) {
-            if (u.getLogin().equals(login)) {
+            if (u.getLogin().equalsIgnoreCase(login)) {
                 if (admin != null) u.setAdmin(admin);
                 if (canEdit != null) u.setCanEdit(canEdit);
                 saveData(data);
@@ -154,7 +154,7 @@ public class UserService implements UserDetailsService {
     public synchronized void changePassword(String login, String newPassword) throws IOException {
         UsersData data = loadData();
         for (UserEntry u : data.getUsers()) {
-            if (u.getLogin().equals(login)) {
+            if (u.getLogin().equalsIgnoreCase(login)) {
                 u.setPassword(newPassword);
                 saveData(data);
                 return;
@@ -165,13 +165,13 @@ public class UserService implements UserDetailsService {
 
     public synchronized void deleteUser(String login) throws IOException {
         UsersData data = loadData();
-        if (data.getUsers().stream().anyMatch(u -> u.getLogin().equals(login) && u.isAdmin())) {
+        if (data.getUsers().stream().anyMatch(u -> u.getLogin().equalsIgnoreCase(login) && u.isAdmin())) {
             long adminCount = data.getUsers().stream().filter(UserEntry::isAdmin).count();
             if (adminCount <= 1) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot delete the last administrator");
             }
         }
-        boolean removed = data.getUsers().removeIf(u -> u.getLogin().equals(login));
+        boolean removed = data.getUsers().removeIf(u -> u.getLogin().equalsIgnoreCase(login));
         if (!removed) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }

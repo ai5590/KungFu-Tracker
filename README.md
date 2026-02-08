@@ -8,7 +8,17 @@ Web application for managing kung fu exercises with tree-based navigation, video
 mvn spring-boot:run
 ```
 
-Open http://localhost:5000 and log in with username `ai`, password `1`.
+Open http://localhost:5000 and log in with username `admin`, password `admin` (fresh install default).
+
+## Docker Deployment
+
+```bash
+docker build -t kungfu .
+docker run -p 5000:5000 -v $(pwd)/data:/app/data kungfu
+```
+
+On first run with an empty `data/` folder and no `users.json`, the default user `admin:admin` is created automatically.
+To update to a new version, simply rebuild the Docker image — your data in `./data/` is preserved via the volume mount.
 
 ## Data Directory
 
@@ -30,13 +40,15 @@ data/
 
 Users are stored in `./users.json` (created automatically on first launch).
 
-On first startup, if `users.txt` exists it is migrated to `users.json`. The default user `ai:1` gets admin + editor rights.
+On first startup, if `users.txt` exists it is migrated to `users.json`. If neither file exists, the default user `admin:admin` is created with admin + editor rights.
+
+Login is case-insensitive: `Admin`, `ADMIN`, and `admin` are treated as the same user.
 
 Format (`users.json`):
 ```json
 {
   "users": [
-    { "login": "ai", "password": "1", "admin": true, "canEdit": true }
+    { "login": "admin", "password": "admin", "admin": true, "canEdit": true }
   ],
   "updatedAt": "2026-02-07T12:00:00Z"
 }
@@ -121,11 +133,15 @@ mvn test
 - Admin panel for user management
 - Password change (self-service)
 - File metadata with descriptions
+- Case-insensitive login
 - Path traversal protection
 - Full Russian UI localization
 
 ## UI/UX
 
+- 4 color themes: Светлая (Light), Полночь (Midnight), Тёмная (Dark), Сакура (Sakura)
+- Theme selection persisted per user in localStorage
+- Settings modal with tabs: password change + color theme picker
 - Responsive layout: sidebar becomes slide-out drawer on mobile (<= 900px)
 - Resizable sidebar with drag handle (min 220px, max 600px, persisted in localStorage)
 - FAB button (bottom-right) for quick section/exercise creation
@@ -133,5 +149,4 @@ mvn test
 - Tree state persistence in localStorage
 - Breadcrumbs navigation with "Главная" (home) link
 - File thumbnails and modal viewer for media
-- Dark theme with CSS custom properties
 - RBAC-aware UI: edit buttons hidden for read-only users

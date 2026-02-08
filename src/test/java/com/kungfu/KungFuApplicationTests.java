@@ -193,11 +193,11 @@ class KungFuApplicationTests {
 
     @Test
     @Order(10)
-    @WithMockUser(username = "ai", roles = {"USER", "EDITOR", "ADMIN"})
+    @WithMockUser(username = "admin", roles = {"USER", "EDITOR", "ADMIN"})
     void testMeEndpointReturnsFlags() throws Exception {
         mvc.perform(get("/api/me"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.login", is("ai")))
+                .andExpect(jsonPath("$.login", is("admin")))
                 .andExpect(jsonPath("$.admin", is(true)))
                 .andExpect(jsonPath("$.canEdit", is(true)));
     }
@@ -277,13 +277,13 @@ class KungFuApplicationTests {
     @Order(14)
     @WithMockUser(roles = {"USER", "EDITOR", "ADMIN"})
     void testCannotDeleteLastAdmin() throws Exception {
-        mvc.perform(delete("/api/admin/users").param("login", "ai"))
+        mvc.perform(delete("/api/admin/users").param("login", "admin"))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     @Order(15)
-    @WithMockUser(username = "ai", roles = {"USER", "EDITOR", "ADMIN"})
+    @WithMockUser(username = "admin", roles = {"USER", "EDITOR", "ADMIN"})
     void testChangePassword() throws Exception {
         mvc.perform(post("/api/me/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -292,12 +292,12 @@ class KungFuApplicationTests {
 
         mvc.perform(post("/api/me/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"oldPassword\":\"1\",\"newPassword\":\"newpw\"}"))
+                        .content("{\"oldPassword\":\"admin\",\"newPassword\":\"newpw\"}"))
                 .andExpect(status().isOk());
 
         mvc.perform(post("/api/me/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"oldPassword\":\"newpw\",\"newPassword\":\"1\"}"))
+                        .content("{\"oldPassword\":\"newpw\",\"newPassword\":\"admin\"}"))
                 .andExpect(status().isOk());
     }
 
@@ -334,6 +334,6 @@ class KungFuApplicationTests {
         Assertions.assertTrue(Files.exists(usersJson));
         UsersData data = mapper.readValue(usersJson.toFile(), UsersData.class);
         Assertions.assertFalse(data.getUsers().isEmpty());
-        Assertions.assertTrue(data.getUsers().stream().anyMatch(u -> u.getLogin().equals("ai") && u.isAdmin() && u.isCanEdit()));
+        Assertions.assertTrue(data.getUsers().stream().anyMatch(u -> u.getLogin().equals("admin") && u.isAdmin() && u.isCanEdit()));
     }
 }
