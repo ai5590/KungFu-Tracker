@@ -7,7 +7,7 @@ Web application for managing kung fu exercises with tree-based navigation, file 
 - **Backend**: Java Spring Boot 3.2.5 with Spring Security + RBAC
 - **Frontend**: Static HTML/CSS/JS served from `src/main/resources/static/`
 - **Storage**: File-based (no database), data stored in `./data/` directory
-- **Users**: JSON-based user management via `./users.json` (migrated from users.txt on first run)
+- **Users**: JSON-based user management via `./data/users.json` (migrated from users.txt on first run)
 - **Build Tool**: Maven
 - **Docker**: Dockerfile available for standalone deployment
 
@@ -21,7 +21,7 @@ Web application for managing kung fu exercises with tree-based navigation, file 
 - `src/main/resources/static/` - Frontend (HTML, CSS, JS) — all in Russian
 - `src/test/java/com/kungfu/` - 17 test cases
 - `./data/` - Runtime data directory (created automatically)
-- `./users.json` - User credentials + roles file (created automatically, migrated from users.txt)
+- `./data/users.json` - User credentials + roles file (created automatically inside data/, migrated from users.txt)
 
 ## Running
 ```bash

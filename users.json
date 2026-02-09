@@ -1,9 +1,0 @@
-{
-  "users" : [ {
-    "login" : "ai",
-    "password" : "1",
-    "admin" : true,
-    "canEdit" : true
-  } ],
-  "updatedAt" : "2026-02-08T21:27:43Z"
-}
