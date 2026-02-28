@@ -1,113 +1,61 @@
 :root {
-    --bg-primary: #1a1a2e;
-    --bg-secondary: #16213e;
-    --bg-tertiary: #0f3460;
-    --bg-input: #0f3460;
-    --bg-card: #0f3460;
-    --bg-hover: #1a4a8a;
-    --bg-deep: #0a0a1a;
-    --text-primary: #e0e0e0;
-    --text-secondary: #a0a0b8;
-    --text-muted: #666680;
-    --accent: #e94560;
-    --accent-hover: #c73e54;
-    --border: #2a2a4a;
-    --border-light: #333355;
-    --danger: #ff6b6b;
-    --danger-bg: #3d1f28;
-    --success: #4ecdc4;
+    --bg-primary: #0F1419;
+    --bg-secondary: #151C23;
+    --bg-tertiary: #18212B;
+    --bg-input: #18212B;
+    --bg-card: #18212B;
+    --bg-hover: #1E2A36;
+    --bg-deep: #0A0E12;
+    --text-primary: #E6EDF3;
+    --text-secondary: #A9B4C0;
+    --text-muted: #7E8A97;
+    --accent: #2AABEE;
+    --accent-hover: #229ED9;
+    --border: #243140;
+    --border-light: #2C3A4A;
+    --danger: #FF453A;
+    --danger-bg: #2D1418;
+    --success: #2ECC71;
+    --warning: #F5A623;
     --radius: 8px;
     --radius-sm: 4px;
-    --shadow: 0 4px 24px rgba(0,0,0,0.3);
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
     --transition: 0.2s ease;
     --sidebar-width: 300px;
-    --login-bg: #1a1a2e;
-    --login-box-bg: #16213e;
-    --login-input-bg: #0f3460;
-    --login-input-border: #333;
-    --login-text: #e0e0e0;
-    --login-sub: #888;
+    --login-bg: #FFFFFF;
+    --login-box-bg: #FFFFFF;
+    --login-input-bg: #FFFFFF;
+    --login-input-border: #E6EAF0;
+    --login-text: #0B0F14;
+    --login-sub: #6D7885;
 }
 
-[data-theme="light"] {
-    --bg-primary: #f0f2f5;
-    --bg-secondary: #ffffff;
-    --bg-tertiary: #e8ecf1;
-    --bg-input: #ffffff;
-    --bg-card: #ffffff;
-    --bg-hover: #dce3eb;
-    --bg-deep: #e4e8ed;
-    --text-primary: #1a1a2e;
-    --text-secondary: #4a4a6a;
-    --text-muted: #8888a0;
-    --accent: #e94560;
-    --accent-hover: #c73e54;
-    --border: #d0d5dd;
-    --border-light: #e0e4ea;
-    --danger: #e53e3e;
-    --danger-bg: #fff0f0;
-    --success: #38a89d;
-    --shadow: 0 4px 24px rgba(0,0,0,0.08);
-    --login-bg: #f0f2f5;
-    --login-box-bg: #ffffff;
-    --login-input-bg: #f5f7fa;
-    --login-input-border: #d0d5dd;
-    --login-text: #1a1a2e;
-    --login-sub: #666;
-}
-
-[data-theme="dark"] {
-    --bg-primary: #121212;
-    --bg-secondary: #1e1e1e;
-    --bg-tertiary: #2a2a2a;
-    --bg-input: #2a2a2a;
-    --bg-card: #252525;
-    --bg-hover: #333333;
-    --bg-deep: #0e0e0e;
-    --text-primary: #e0e0e0;
-    --text-secondary: #a0a0a0;
-    --text-muted: #666666;
-    --accent: #bb86fc;
-    --accent-hover: #9a67ea;
-    --border: #333333;
-    --border-light: #3a3a3a;
-    --danger: #cf6679;
-    --danger-bg: #3d1f28;
-    --success: #03dac6;
-    --shadow: 0 4px 24px rgba(0,0,0,0.5);
-    --login-bg: #121212;
-    --login-box-bg: #1e1e1e;
-    --login-input-bg: #2a2a2a;
-    --login-input-border: #333;
-    --login-text: #e0e0e0;
-    --login-sub: #888;
-}
-
-[data-theme="sakura"] {
-    --bg-primary: #2d1b2e;
-    --bg-secondary: #3a2240;
-    --bg-tertiary: #4a2d52;
-    --bg-input: #4a2d52;
-    --bg-card: #3e2545;
-    --bg-hover: #5a3562;
-    --bg-deep: #1e1020;
-    --text-primary: #f0d6e8;
-    --text-secondary: #c8a0b8;
-    --text-muted: #886080;
-    --accent: #ff7eb3;
-    --accent-hover: #e0609a;
-    --border: #5a3562;
-    --border-light: #6a4572;
-    --danger: #ff6b8a;
-    --danger-bg: #4d1f30;
-    --success: #7ec8a0;
-    --shadow: 0 4px 24px rgba(0,0,0,0.4);
-    --login-bg: #2d1b2e;
-    --login-box-bg: #3a2240;
-    --login-input-bg: #4a2d52;
-    --login-input-border: #5a3562;
-    --login-text: #f0d6e8;
-    --login-sub: #c8a0b8;
+[data-theme="day"] {
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #F6F7F8;
+    --bg-tertiary: #EEF0F2;
+    --bg-input: #FFFFFF;
+    --bg-card: #FFFFFF;
+    --bg-hover: #E8EBED;
+    --bg-deep: #EEF0F2;
+    --text-primary: #0B0F14;
+    --text-secondary: #6D7885;
+    --text-muted: #98A2AE;
+    --accent: #2AABEE;
+    --accent-hover: #229ED9;
+    --border: #E6EAF0;
+    --border-light: #EEF0F2;
+    --danger: #FF3B30;
+    --danger-bg: #FFF0F0;
+    --success: #2ECC71;
+    --warning: #F5A623;
+    --shadow: 0 4px 24px rgba(0,0,0,0.06);
+    --login-bg: #FFFFFF;
+    --login-box-bg: #FFFFFF;
+    --login-input-bg: #FFFFFF;
+    --login-input-border: #E6EAF0;
+    --login-text: #0B0F14;
+    --login-sub: #6D7885;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -260,6 +208,15 @@ body {
     width: 20px;
     text-align: center;
     flex-shrink: 0;
+}
+.exercise-icon {
+    color: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.exercise-icon svg {
+    display: block;
 }
 .tree-name {
     flex: 1;
@@ -506,11 +463,12 @@ textarea::placeholder, input::placeholder { color: var(--text-muted); }
 .upload-area {
     display: flex;
     gap: 8px;
-    align-items: center;
+    align-items: flex-start;
     flex-wrap: wrap;
 }
-.upload-area input[type="file"] { font-size: 13px; color: var(--text-secondary); }
-.upload-area button {
+.file-input-label {
+    display: inline-flex;
+    align-items: center;
     padding: 8px 20px;
     background: var(--bg-tertiary);
     color: var(--text-primary);
@@ -518,9 +476,50 @@ textarea::placeholder, input::placeholder { color: var(--text-muted); }
     border-radius: var(--radius-sm);
     cursor: pointer;
     font-size: 13px;
+    font-weight: 500;
     transition: background var(--transition);
 }
-.upload-area button:hover { background: var(--bg-hover); }
+.file-input-label:hover { background: var(--bg-hover); }
+.file-input-label input[type="file"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+}
+.selected-files {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+.selected-file-item {
+    display: inline-block;
+    padding: 4px 10px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    color: var(--text-secondary);
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.upload-btn {
+    padding: 8px 20px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background var(--transition);
+}
+.upload-btn:hover { background: var(--accent-hover); }
 
 .fab {
     position: fixed;

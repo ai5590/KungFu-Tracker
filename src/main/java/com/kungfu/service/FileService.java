@@ -10,20 +10,40 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 @Service
 public class FileService {
 
     private final Path dataRoot;
+    private final ExerciseService exerciseService;
 
-    public FileService(@Value("${app.data-dir}") String dataDir) {
+    public FileService(@Value("${app.data-dir}") String dataDir, ExerciseService exerciseService) {
         this.dataRoot = Path.of(dataDir).toAbsolutePath().normalize();
+        this.exerciseService = exerciseService;
     }
 
     public Path getDataRoot() {
         return dataRoot;
+    }
+
+    private Path resolveVariantDir(Path dir) throws IOException {
+        if (!Files.exists(dir.resolve("exercise.json"))) {
+            return dir;
+        }
+        List<String> variants = exerciseService.listVariantNames(dir);
+        if (!variants.isEmpty()) {
+            return dir.resolve(variants.get(0));
+        }
+        exerciseService.migrateToVariantsIfNeeded(dir);
+        variants = exerciseService.listVariantNames(dir);
+        if (!variants.isEmpty()) {
+            return dir.resolve(variants.get(0));
+        }
+        return dir;
     }
 
     public void uploadFiles(String exercisePath, MultipartFile[] files) throws IOException {
@@ -31,6 +51,7 @@ public class FileService {
         if (!Files.exists(dir.resolve("exercise.json"))) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Exercise not found");
         }
+        dir = resolveVariantDir(dir);
         Path mediaDir = dir.resolve("media");
         Files.createDirectories(mediaDir);
 
@@ -67,6 +88,7 @@ public class FileService {
     public void deleteFile(String exercisePath, String fileName) throws IOException {
         PathUtil.validateFileName(fileName);
         Path dir = PathUtil.resolveAndValidate(dataRoot, exercisePath);
+        dir = resolveVariantDir(dir);
         Path file = dir.resolve("media").resolve(fileName);
         if (!Files.exists(file)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found");
@@ -77,6 +99,11 @@ public class FileService {
     public Path getFilePath(String exercisePath, String fileName) {
         PathUtil.validateFileName(fileName);
         Path dir = PathUtil.resolveAndValidate(dataRoot, exercisePath);
+        try {
+            dir = resolveVariantDir(dir);
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error resolving variant directory");
+        }
         Path file = dir.resolve("media").resolve(fileName);
         if (!Files.exists(file)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found");

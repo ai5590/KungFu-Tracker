@@ -107,7 +107,7 @@ class KungFuApplicationTests {
                         .content("{\"notes\":\"Updated notes content\"}"))
                 .andExpect(status().isOk());
 
-        String notes = Files.readString(dataDir.resolve("KungFu/Basics/HorseStance/notes.md"), StandardCharsets.UTF_8);
+        String notes = Files.readString(dataDir.resolve("KungFu/Basics/HorseStance/_default/notes.md"), StandardCharsets.UTF_8);
         Assertions.assertEquals("Updated notes content", notes);
     }
 
@@ -121,7 +121,7 @@ class KungFuApplicationTests {
                         .param("exercisePath", "KungFu/Basics/HorseStance"))
                 .andExpect(status().isOk());
 
-        Assertions.assertTrue(Files.exists(dataDir.resolve("KungFu/Basics/HorseStance/media/test.txt")));
+        Assertions.assertTrue(Files.exists(dataDir.resolve("KungFu/Basics/HorseStance/_default/media/test.txt")));
 
         mvc.perform(get("/api/exercises").param("path", "KungFu/Basics/HorseStance"))
                 .andExpect(status().isOk())
@@ -133,7 +133,7 @@ class KungFuApplicationTests {
     @Order(6)
     @WithMockUser(roles = {"USER", "EDITOR"})
     void testDeleteFileRemovesIt() throws Exception {
-        Path mediaFile = dataDir.resolve("KungFu/Basics/HorseStance/media/todelete.txt");
+        Path mediaFile = dataDir.resolve("KungFu/Basics/HorseStance/_default/media/todelete.txt");
         Files.createDirectories(mediaFile.getParent());
         Files.writeString(mediaFile, "temp");
 
@@ -169,7 +169,7 @@ class KungFuApplicationTests {
     void testRangeRequestReturns206() throws Exception {
         byte[] bigContent = new byte[5 * 1024 * 1024];
         for (int i = 0; i < bigContent.length; i++) bigContent[i] = (byte)(i % 256);
-        Path mediaFile = dataDir.resolve("KungFu/Basics/HorseStance/media/big.mp4");
+        Path mediaFile = dataDir.resolve("KungFu/Basics/HorseStance/_default/media/big.mp4");
         Files.createDirectories(mediaFile.getParent());
         Files.write(mediaFile, bigContent);
 

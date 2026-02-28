@@ -23,6 +23,8 @@ import java.util.stream.Collectors;
 @Service
 public class ExerciseService {
 
+    public static final String DEFAULT_VARIANT = "_default";
+
     private final Path dataRoot;
     private final ObjectMapper mapper;
 
@@ -44,23 +46,140 @@ public class ExerciseService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Exercise not found");
         }
 
+        migrateToVariantsIfNeeded(dir);
+
         ExerciseMeta meta = mapper.readValue(jsonFile.toFile(), ExerciseMeta.class);
 
-        String notes = "";
-        Path notesFile = dir.resolve("notes.md");
-        if (Files.exists(notesFile)) {
-            notes = Files.readString(notesFile, StandardCharsets.UTF_8);
-        }
-
-        List<FileInfo> files = listMediaFiles(exercisePath, dir);
+        List<String> variantNames = listVariantNames(dir);
 
         ExerciseView view = new ExerciseView();
         view.setPath(exercisePath);
         view.setTitle(meta.getTitle());
         view.setText(meta.getText());
-        view.setNotes(notes);
-        view.setFiles(files);
+
+        if (variantNames.size() == 1) {
+            String variantName = variantNames.get(0);
+            Path variantDir = dir.resolve(variantName);
+            String variantPath = exercisePath + "/" + variantName;
+
+            String notes = "";
+            Path notesFile = variantDir.resolve("notes.md");
+            if (Files.exists(notesFile)) {
+                notes = Files.readString(notesFile, StandardCharsets.UTF_8);
+            }
+
+            List<FileInfo> files = listMediaFiles(variantPath, variantDir);
+
+            view.setNotes(notes);
+            view.setFiles(files);
+
+            VariantData vd = new VariantData();
+            vd.setName(variantName);
+            vd.setTitle(meta.getTitle());
+            vd.setText(meta.getText());
+            vd.setNotes(notes);
+            vd.setFiles(files);
+            view.setVariants(List.of(vd));
+        } else {
+            List<VariantData> variants = new ArrayList<>();
+            for (String variantName : variantNames) {
+                Path variantDir = dir.resolve(variantName);
+                String variantPath = exercisePath + "/" + variantName;
+
+                ExerciseMeta variantMeta = null;
+                Path variantJson = variantDir.resolve("exercise.json");
+                if (Files.exists(variantJson)) {
+                    variantMeta = mapper.readValue(variantJson.toFile(), ExerciseMeta.class);
+                }
+
+                String notes = "";
+                Path notesFile = variantDir.resolve("notes.md");
+                if (Files.exists(notesFile)) {
+                    notes = Files.readString(notesFile, StandardCharsets.UTF_8);
+                }
+
+                List<FileInfo> files = listMediaFiles(variantPath, variantDir);
+
+                VariantData vd = new VariantData();
+                vd.setName(variantName);
+                vd.setTitle(variantMeta != null ? variantMeta.getTitle() : variantName);
+                vd.setText(variantMeta != null ? variantMeta.getText() : "");
+                vd.setNotes(notes);
+                vd.setFiles(files);
+                variants.add(vd);
+            }
+            view.setVariants(variants);
+            view.setNotes("");
+            view.setFiles(List.of());
+        }
+
         return view;
+    }
+
+    public void migrateToVariantsIfNeeded(Path exerciseDir) throws IOException {
+        if (!Files.exists(exerciseDir.resolve("exercise.json"))) {
+            return;
+        }
+
+        List<String> existingVariants = listVariantNames(exerciseDir);
+        if (!existingVariants.isEmpty()) {
+            return;
+        }
+
+        Path defaultDir = exerciseDir.resolve(DEFAULT_VARIANT);
+        Files.createDirectories(defaultDir);
+
+        Path notesFile = exerciseDir.resolve("notes.md");
+        if (Files.exists(notesFile)) {
+            Files.move(notesFile, defaultDir.resolve("notes.md"));
+        } else {
+            Files.writeString(defaultDir.resolve("notes.md"), "", StandardCharsets.UTF_8);
+        }
+
+        Path filesJson = exerciseDir.resolve("files.json");
+        if (Files.exists(filesJson)) {
+            Files.move(filesJson, defaultDir.resolve("files.json"));
+        }
+
+        Path mediaDir = exerciseDir.resolve("media");
+        if (Files.exists(mediaDir) && Files.isDirectory(mediaDir)) {
+            Files.move(mediaDir, defaultDir.resolve("media"));
+        } else {
+            Files.createDirectories(defaultDir.resolve("media"));
+        }
+
+        ExerciseMeta containerMeta = mapper.readValue(exerciseDir.resolve("exercise.json").toFile(), ExerciseMeta.class);
+        ExerciseMeta variantMeta = new ExerciseMeta(containerMeta.getTitle(), containerMeta.getText());
+        variantMeta.setCreatedAt(containerMeta.getCreatedAt());
+        variantMeta.setUpdatedAt(containerMeta.getUpdatedAt());
+        mapper.writerWithDefaultPrettyPrinter().writeValue(defaultDir.resolve("exercise.json").toFile(), variantMeta);
+    }
+
+    public List<String> listVariantNames(Path exerciseDir) throws IOException {
+        List<String> variants = new ArrayList<>();
+        if (!Files.exists(exerciseDir) || !Files.isDirectory(exerciseDir)) {
+            return variants;
+        }
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(exerciseDir)) {
+            for (Path entry : stream) {
+                if (Files.isDirectory(entry)) {
+                    String name = entry.getFileName().toString();
+                    if (!name.equals("media") && !name.startsWith(".") && Files.exists(entry.resolve("exercise.json"))) {
+                        variants.add(name);
+                    }
+                }
+            }
+        }
+        variants.sort((a, b) -> {
+            if (a.equals(DEFAULT_VARIANT)) return -1;
+            if (b.equals(DEFAULT_VARIANT)) return 1;
+            return a.compareToIgnoreCase(b);
+        });
+        return variants;
+    }
+
+    public int countVariants(Path exerciseDir) throws IOException {
+        return listVariantNames(exerciseDir).size();
     }
 
     private List<FileInfo> listMediaFiles(String exercisePath, Path dir) throws IOException {
@@ -144,6 +263,14 @@ public class ExerciseService {
         return data;
     }
 
+    public Path resolveToVariantDir(Path dir) throws IOException {
+        List<String> variants = listVariantNames(dir);
+        if (!variants.isEmpty()) {
+            return dir.resolve(variants.get(0));
+        }
+        return dir;
+    }
+
     public void updateFileDescription(String exercisePath, String fileName, String description) throws IOException {
         Path dir = PathUtil.resolveAndValidate(dataRoot, exercisePath);
         if (!Files.exists(dir.resolve("exercise.json"))) {
@@ -151,7 +278,8 @@ public class ExerciseService {
         }
         PathUtil.validateFileName(fileName);
 
-        FilesData data = syncFilesJson(dir);
+        Path targetDir = resolveToVariantDir(dir);
+        FilesData data = syncFilesJson(targetDir);
         boolean found = false;
         for (FileMeta fm : data.getFiles()) {
             if (fm.getFileName().equals(fileName)) {
@@ -164,7 +292,7 @@ public class ExerciseService {
         if (!found) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found in metadata");
         }
-        mapper.writerWithDefaultPrettyPrinter().writeValue(dir.resolve("files.json").toFile(), data);
+        mapper.writerWithDefaultPrettyPrinter().writeValue(targetDir.resolve("files.json").toFile(), data);
     }
 
     public void updateText(String exercisePath, String text) throws IOException {
@@ -181,10 +309,11 @@ public class ExerciseService {
 
     public void updateNotes(String exercisePath, String notes) throws IOException {
         Path dir = PathUtil.resolveAndValidate(dataRoot, exercisePath);
-        Path notesFile = dir.resolve("notes.md");
         if (!Files.exists(dir.resolve("exercise.json"))) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Exercise not found");
         }
+        Path targetDir = resolveToVariantDir(dir);
+        Path notesFile = targetDir.resolve("notes.md");
         Files.writeString(notesFile, notes, StandardCharsets.UTF_8);
     }
 
@@ -197,10 +326,16 @@ public class ExerciseService {
         if (Files.exists(exerciseDir)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Exercise already exists");
         }
-        Files.createDirectories(exerciseDir.resolve("media"));
+        Files.createDirectories(exerciseDir);
         ExerciseMeta meta = new ExerciseMeta(title, "");
         mapper.writerWithDefaultPrettyPrinter().writeValue(exerciseDir.resolve("exercise.json").toFile(), meta);
-        Files.writeString(exerciseDir.resolve("notes.md"), "", StandardCharsets.UTF_8);
+
+        Path defaultDir = exerciseDir.resolve(DEFAULT_VARIANT);
+        Files.createDirectories(defaultDir.resolve("media"));
+        ExerciseMeta variantMeta = new ExerciseMeta(title, "");
+        mapper.writerWithDefaultPrettyPrinter().writeValue(defaultDir.resolve("exercise.json").toFile(), variantMeta);
+        Files.writeString(defaultDir.resolve("notes.md"), "", StandardCharsets.UTF_8);
+
         return dataRoot.relativize(exerciseDir).toString().replace('\\', '/');
     }
 
@@ -230,6 +365,89 @@ public class ExerciseService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Exercise not found");
         }
         deleteRecursive(dir);
+    }
+
+    public String createVariant(String exercisePath, String variantName) throws IOException {
+        Path dir = PathUtil.resolveAndValidate(dataRoot, exercisePath);
+        if (!Files.exists(dir.resolve("exercise.json"))) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Exercise not found");
+        }
+        migrateToVariantsIfNeeded(dir);
+
+        if (variantName == null || variantName.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Variant name must not be empty");
+        }
+        if (variantName.contains("..") || variantName.contains("/") || variantName.contains("\\")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid variant name");
+        }
+
+        Path variantDir = dir.resolve(variantName);
+        if (Files.exists(variantDir)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Variant already exists");
+        }
+
+        Files.createDirectories(variantDir.resolve("media"));
+        ExerciseMeta variantMeta = new ExerciseMeta(variantName, "");
+        mapper.writerWithDefaultPrettyPrinter().writeValue(variantDir.resolve("exercise.json").toFile(), variantMeta);
+        Files.writeString(variantDir.resolve("notes.md"), "", StandardCharsets.UTF_8);
+
+        return exercisePath + "/" + variantName;
+    }
+
+    public void deleteVariant(String exercisePath, String variantName) throws IOException {
+        Path dir = PathUtil.resolveAndValidate(dataRoot, exercisePath);
+        if (!Files.exists(dir.resolve("exercise.json"))) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Exercise not found");
+        }
+        if (variantName == null || variantName.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Variant name must not be empty");
+        }
+
+        Path variantDir = dir.resolve(variantName);
+        if (!Files.exists(variantDir) || !Files.exists(variantDir.resolve("exercise.json"))) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Variant not found");
+        }
+
+        List<String> variants = listVariantNames(dir);
+        if (variants.size() <= 1) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot delete the last variant");
+        }
+
+        deleteRecursive(variantDir);
+    }
+
+    public String renameVariant(String exercisePath, String oldName, String newName) throws IOException {
+        Path dir = PathUtil.resolveAndValidate(dataRoot, exercisePath);
+        if (!Files.exists(dir.resolve("exercise.json"))) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Exercise not found");
+        }
+        if (oldName == null || oldName.isBlank() || newName == null || newName.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Variant names must not be empty");
+        }
+        if (newName.contains("..") || newName.contains("/") || newName.contains("\\")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid variant name");
+        }
+
+        Path oldDir = dir.resolve(oldName);
+        if (!Files.exists(oldDir) || !Files.exists(oldDir.resolve("exercise.json"))) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Variant not found");
+        }
+
+        Path newDir = dir.resolve(newName);
+        if (!newDir.equals(oldDir) && Files.exists(newDir)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "A variant with this name already exists");
+        }
+
+        ExerciseMeta variantMeta = mapper.readValue(oldDir.resolve("exercise.json").toFile(), ExerciseMeta.class);
+        variantMeta.setTitle(newName);
+        variantMeta.setUpdatedAt(Instant.now());
+        mapper.writerWithDefaultPrettyPrinter().writeValue(oldDir.resolve("exercise.json").toFile(), variantMeta);
+
+        if (!newDir.equals(oldDir)) {
+            Files.move(oldDir, newDir);
+        }
+
+        return exercisePath + "/" + newName;
     }
 
     private void deleteRecursive(Path path) throws IOException {

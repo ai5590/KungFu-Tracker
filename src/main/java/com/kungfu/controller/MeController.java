@@ -32,7 +32,9 @@ public class MeController {
         result.put("login", user.getLogin());
         result.put("admin", user.isAdmin());
         result.put("canEdit", user.isCanEdit());
-        result.put("theme", user.getTheme() != null ? user.getTheme() : "midnight");
+        String theme = user.getTheme();
+        if (theme == null || (!theme.equals("day") && !theme.equals("night"))) theme = "night";
+        result.put("theme", theme);
         return result;
     }
 
@@ -58,7 +60,7 @@ public class MeController {
         return ResponseEntity.ok(Map.of("status", "ok"));
     }
 
-    private static final java.util.Set<String> VALID_THEMES = java.util.Set.of("light", "midnight", "dark", "sakura");
+    private static final java.util.Set<String> VALID_THEMES = java.util.Set.of("day", "night");
 
     @PostMapping("/theme")
     public ResponseEntity<?> setTheme(Authentication auth, @RequestBody Map<String, String> body) throws IOException {

@@ -7,7 +7,7 @@
     <script>
         (function(){
             var t = localStorage.getItem('kf_theme_v1');
-            if (t && t !== 'midnight') document.documentElement.setAttribute('data-theme', t);
+            if (t && t !== 'night') document.documentElement.setAttribute('data-theme', t);
         })();
     </script>
     <link rel="stylesheet" href="/css/style.css">
@@ -58,17 +58,21 @@
                     <button class="edit-btn" onclick="saveText()">Сохранить описание</button>
                 </div>
                 <div class="section-block">
-                    <h3>Заметки</h3>
-                    <textarea id="exerciseNotes" rows="6"></textarea>
-                    <button class="edit-btn" onclick="saveNotes()">Сохранить заметки</button>
-                </div>
-                <div class="section-block">
                     <h3>Файлы</h3>
                     <div id="fileList" class="file-list"></div>
                     <div id="uploadArea" class="upload-area">
-                        <input type="file" id="fileInput" multiple>
-                        <button onclick="uploadFiles()">Загрузить</button>
+                        <label class="file-input-label">
+                            <input type="file" id="fileInput" multiple onchange="onFileInputChange()">
+                            <span>Выбрать файлы</span>
+                        </label>
+                        <div id="selectedFiles" class="selected-files"></div>
+                        <button id="uploadBtn" class="upload-btn" onclick="uploadFiles()" style="display:none">Загрузить</button>
                     </div>
+                </div>
+                <div class="section-block">
+                    <h3>Заметки</h3>
+                    <textarea id="exerciseNotes" rows="6"></textarea>
+                    <button class="edit-btn" onclick="saveNotes()">Сохранить заметки</button>
                 </div>
             </div>
 
@@ -156,37 +160,21 @@
                     <h3>Цветовая схема</h3>
                 </div>
                 <div class="theme-grid">
-                    <div class="theme-card" onclick="setTheme('light')">
+                    <div class="theme-card" onclick="setTheme('day')">
                         <div class="theme-card-preview">
-                            <div style="background:#f0f2f5"></div>
-                            <div style="background:#ffffff"></div>
-                            <div style="background:#e94560"></div>
+                            <div style="background:#FFFFFF"></div>
+                            <div style="background:#F6F7F8"></div>
+                            <div style="background:#2AABEE"></div>
                         </div>
-                        <div class="theme-card-name">Светлая</div>
+                        <div class="theme-card-name">Telegram Day</div>
                     </div>
-                    <div class="theme-card" onclick="setTheme('midnight')">
+                    <div class="theme-card" onclick="setTheme('night')">
                         <div class="theme-card-preview">
-                            <div style="background:#1a1a2e"></div>
-                            <div style="background:#16213e"></div>
-                            <div style="background:#e94560"></div>
+                            <div style="background:#0F1419"></div>
+                            <div style="background:#151C23"></div>
+                            <div style="background:#2AABEE"></div>
                         </div>
-                        <div class="theme-card-name">Полночь</div>
-                    </div>
-                    <div class="theme-card" onclick="setTheme('dark')">
-                        <div class="theme-card-preview">
-                            <div style="background:#121212"></div>
-                            <div style="background:#1e1e1e"></div>
-                            <div style="background:#bb86fc"></div>
-                        </div>
-                        <div class="theme-card-name">Тёмная</div>
-                    </div>
-                    <div class="theme-card" onclick="setTheme('sakura')">
-                        <div class="theme-card-preview">
-                            <div style="background:#2d1b2e"></div>
-                            <div style="background:#3a2240"></div>
-                            <div style="background:#ff7eb3"></div>
-                        </div>
-                        <div class="theme-card-name">Сакура</div>
+                        <div class="theme-card-name">Telegram Night</div>
                     </div>
                 </div>
                 <div class="settings-actions">

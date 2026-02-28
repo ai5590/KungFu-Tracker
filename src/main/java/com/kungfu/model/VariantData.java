@@ -1,19 +1,18 @@
 package com.kungfu.model;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.List;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class ExerciseView {
-    private String path;
+public class VariantData {
+    private String name;
     private String title;
     private String text;
     private String notes;
     private List<FileInfo> files;
-    private List<VariantData> variants;
 
-    public String getPath() { return path; }
-    public void setPath(String path) { this.path = path; }
+    public VariantData() {}
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
     public String getText() { return text; }
@@ -22,6 +21,4 @@ public class ExerciseView {
     public void setNotes(String notes) { this.notes = notes; }
     public List<FileInfo> getFiles() { return files; }
     public void setFiles(List<FileInfo> files) { this.files = files; }
-    public List<VariantData> getVariants() { return variants; }
-    public void setVariants(List<VariantData> variants) { this.variants = variants; }
 }

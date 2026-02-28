@@ -16,9 +16,11 @@ import java.util.List;
 public class TreeService {
 
     private final Path dataRoot;
+    private final ExerciseService exerciseService;
 
-    public TreeService(@Value("${app.data-dir}") String dataDir) {
+    public TreeService(@Value("${app.data-dir}") String dataDir, ExerciseService exerciseService) {
         this.dataRoot = Path.of(dataDir).toAbsolutePath().normalize();
+        this.exerciseService = exerciseService;
     }
 
     public Path getDataRoot() {
@@ -51,7 +53,18 @@ public class TreeService {
             String relativePath = dataRoot.relativize(entry).toString().replace('\\', '/');
 
             if (Files.exists(entry.resolve("exercise.json"))) {
-                nodes.add(new TreeNode(name, relativePath, "EXERCISE", null));
+                TreeNode node = new TreeNode(name, relativePath, "EXERCISE", null);
+                int variantCount = exerciseService.countVariants(entry);
+                if (variantCount == 0) {
+                    try {
+                        exerciseService.migrateToVariantsIfNeeded(entry);
+                        variantCount = exerciseService.countVariants(entry);
+                    } catch (IOException e) {
+                        variantCount = 1;
+                    }
+                }
+                node.setVariantCount(variantCount);
+                nodes.add(node);
             } else if (Files.exists(entry.resolve("_section.json"))) {
                 List<TreeNode> children = buildChildren(entry);
                 nodes.add(new TreeNode(name, relativePath, "SECTION", children));

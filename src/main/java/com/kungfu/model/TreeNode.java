@@ -9,6 +9,7 @@ public class TreeNode {
     private String path;
     private String nodeType;
     private List<TreeNode> children;
+    private Integer variantCount;
 
     public TreeNode() {}
 
@@ -27,4 +28,6 @@ public class TreeNode {
     public void setNodeType(String nodeType) { this.nodeType = nodeType; }
     public List<TreeNode> getChildren() { return children; }
     public void setChildren(List<TreeNode> children) { this.children = children; }
+    public Integer getVariantCount() { return variantCount; }
+    public void setVariantCount(Integer variantCount) { this.variantCount = variantCount; }
 }

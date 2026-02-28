@@ -85,11 +85,13 @@ async function fetchMe() {
             document.getElementById('fab').style.display = 'none';
         }
         if (data.theme) {
-            localStorage.setItem(STORAGE_KEY_THEME, data.theme);
-            if (data.theme === 'midnight') {
+            var t = data.theme;
+            if (t !== 'day' && t !== 'night') t = 'night';
+            localStorage.setItem(STORAGE_KEY_THEME, t);
+            if (t === 'night') {
                 document.documentElement.removeAttribute('data-theme');
             } else {
-                document.documentElement.setAttribute('data-theme', data.theme);
+                document.documentElement.setAttribute('data-theme', t);
             }
         }
     }
@@ -164,8 +166,8 @@ function renderNodes(nodes, container) {
             arrow.textContent = '';
 
             const icon = document.createElement('span');
-            icon.className = 'tree-icon';
-            icon.textContent = '\uD83E\uDD4B';
+            icon.className = 'tree-icon exercise-icon';
+            icon.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C10.9 2 10 2.9 10 4s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-1 7.5L7.5 21h2l1.5-5 2 2v3h2v-4.5L13 14l.5-3.5C14.5 12 16.5 13 19 13v-2c-2.5 0-4-1-5-2.5l-1-1.5c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.2L5 8.5V13h2V9.5l2-1z"/></svg>';
 
             const name = document.createElement('span');
             name.className = 'tree-name';
@@ -329,7 +331,7 @@ function showSection(path) {
         const item = document.createElement('div');
         item.className = 'section-item';
         item.onclick = () => loadExercise(ex.path);
-        item.innerHTML = `<span class="section-item-icon">\uD83E\uDD4B</span><div class="section-item-info"><div class="section-item-name">${esc(ex.name)}</div><div class="section-item-type">Упражнение</div></div>`;
+        item.innerHTML = `<span class="section-item-icon exercise-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2C10.9 2 10 2.9 10 4s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-1 7.5L7.5 21h2l1.5-5 2 2v3h2v-4.5L13 14l.5-3.5C14.5 12 16.5 13 19 13v-2c-2.5 0-4-1-5-2.5l-1-1.5c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.2L5 8.5V13h2V9.5l2-1z"/></svg></span><div class="section-item-info"><div class="section-item-name">${esc(ex.name)}</div><div class="section-item-type">Упражнение</div></div>`;
         container.appendChild(item);
     }
 
@@ -578,6 +580,24 @@ async function saveNotes() {
     });
 }
 
+function onFileInputChange() {
+    const input = document.getElementById('fileInput');
+    const selectedDiv = document.getElementById('selectedFiles');
+    const uploadBtn = document.getElementById('uploadBtn');
+    selectedDiv.innerHTML = '';
+    if (input.files.length > 0) {
+        for (const f of input.files) {
+            const item = document.createElement('span');
+            item.className = 'selected-file-item';
+            item.textContent = f.name;
+            selectedDiv.appendChild(item);
+        }
+        uploadBtn.style.display = '';
+    } else {
+        uploadBtn.style.display = 'none';
+    }
+}
+
 async function uploadFiles() {
     if (!appState.selectedPath) return;
     const input = document.getElementById('fileInput');
@@ -590,6 +610,8 @@ async function uploadFiles() {
     });
     if (resp.ok) {
         input.value = '';
+        document.getElementById('selectedFiles').innerHTML = '';
+        document.getElementById('uploadBtn').style.display = 'none';
         loadExercise(appState.selectedPath);
     } else {
         alert('Ошибка загрузки');
@@ -927,11 +949,11 @@ function openSettingsPage(page) {
 }
 
 function getCurrentTheme() {
-    return localStorage.getItem(STORAGE_KEY_THEME) || 'midnight';
+    return localStorage.getItem(STORAGE_KEY_THEME) || 'night';
 }
 
 async function setTheme(theme) {
-    if (theme === 'midnight') {
+    if (theme === 'night') {
         document.documentElement.removeAttribute('data-theme');
     } else {
         document.documentElement.setAttribute('data-theme', theme);
@@ -958,7 +980,7 @@ function updateThemeCards() {
 
 function applyStoredTheme() {
     const theme = getCurrentTheme();
-    if (theme && theme !== 'midnight') {
+    if (theme && theme !== 'night') {
         document.documentElement.setAttribute('data-theme', theme);
     }
 }

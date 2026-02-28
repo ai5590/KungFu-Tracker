@@ -54,4 +54,27 @@ public class ExerciseController {
         exerciseService.deleteExercise(path);
         return ResponseEntity.ok(Map.of("status", "ok"));
     }
+
+    @PostMapping("/variant")
+    public ResponseEntity<?> createVariant(@RequestBody Map<String, String> body) throws IOException {
+        String exercisePath = body.get("path");
+        String variantName = body.get("variantName");
+        String created = exerciseService.createVariant(exercisePath, variantName);
+        return ResponseEntity.ok(Map.of("path", created));
+    }
+
+    @DeleteMapping("/variant")
+    public ResponseEntity<?> deleteVariant(@RequestParam String path, @RequestParam String variant) throws IOException {
+        exerciseService.deleteVariant(path, variant);
+        return ResponseEntity.ok(Map.of("status", "ok"));
+    }
+
+    @PutMapping("/variant/rename")
+    public ResponseEntity<?> renameVariant(@RequestBody Map<String, String> body) throws IOException {
+        String exercisePath = body.get("path");
+        String oldName = body.get("oldName");
+        String newName = body.get("newName");
+        String result = exerciseService.renameVariant(exercisePath, oldName, newName);
+        return ResponseEntity.ok(Map.of("path", result));
+    }
 }
