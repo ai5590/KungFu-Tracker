@@ -8,7 +8,7 @@ RUN mvn package -DskipTests -q
 FROM eclipse-temurin:17-jre
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
-EXPOSE 5000
+EXPOSE 55055
 ENV APP_DATA_DIR=/app/data
 ENV APP_USERS_FILE=/app/data/users.txt
 VOLUME /app/data
